@@ -9,7 +9,7 @@
 #ifndef COMPETITOR_H
 #define COMPETITOR_H
 
-#include "../statemachine.h"
+#include "statemachine.h"
 #include "lock_utils.h"
 
 class CompetitorMessage ;

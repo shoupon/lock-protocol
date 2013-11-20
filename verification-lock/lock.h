@@ -9,7 +9,7 @@
 #ifndef LOCK_H
 #define LOCK_H
 
-#include "../statemachine.h"
+#include "statemachine.h"
 #include "lock_utils.h"
 
 class LockMessage;
@@ -21,7 +21,7 @@ public:
     // k: Identifier of the lock
     // delta: the duration of the lock
     // num: total number of vehicles
-    Lock(int k, int delta, int num, Lookup* msg, Lookup* mac) ;
+    Lock(int k, int num, Lookup* msg, Lookup* mac) ;
     
     int transit(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs,
                         bool& high_prob, int startIdx = 0);
@@ -33,7 +33,6 @@ public:
     
 private:
     const int _id;
-    const int _delta;
     string _name;
     int _machineId;
     

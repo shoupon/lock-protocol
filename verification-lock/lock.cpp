@@ -11,8 +11,8 @@ using namespace std;
 
 #include "lock.h"
 
-Lock::Lock(int k, int delta, int num, Lookup* msg, Lookup* mac)
-:_id(k), _delta(delta), _range(num), StateMachine(msg,mac)
+Lock::Lock(int k, int num, Lookup* msg, Lookup* mac)
+:_id(k), _range(num), StateMachine(msg,mac)
 {
     // The name of the lock is "lock(i)", where i is the id of the machine
     _name = Lock_Utils::getLockName(_id);
@@ -34,7 +34,7 @@ int Lock::transit(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs,
     string msg = IntToMessage(inMsg->destMsgId() ) ;
     switch ( _current ) {
         case 0 :
-            if( msg == "REQUEST" ) {
+            if( msg == "REQUEST" ) {        // become slave
                 // Assignments
                 int i = inMsg->getParam(0) ;
                 int t = inMsg->getParam(2) ;
@@ -49,7 +49,7 @@ int Lock::transit(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs,
                 
                 return 3;
             }
-            else if( msg == "init" ) {
+            else if( msg == "init" ) {      // become master
                 assert( inMsg->numParams() == 3 ) ;
                 // Assignments
                 _ts = inMsg->getParam(0);

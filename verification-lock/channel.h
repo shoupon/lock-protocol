@@ -14,7 +14,7 @@
 #include <vector>
 using namespace std;
 
-#include "../statemachine.h"
+#include "statemachine.h"
 #include "lock.h"
 #include "competitor.h"
 

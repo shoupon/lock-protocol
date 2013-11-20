@@ -2,11 +2,11 @@
 #include "lock_utils.h"
 #include "competitor.h"
 #include "lock.h"
-#include "../define.h"
+#include "define.h"
 
-Controller::Controller( Lookup* msg, Lookup* mac, int num, int delta )
+Controller::Controller( Lookup* msg, Lookup* mac, int num )
 : StateMachine(msg, mac), _numVehs(num), _nbrs(num)
-, _time(0), _delta(delta), _altBit(0)
+, _time(0), _altBit(0)
 { 
     _name = "controller" ;
     _machineId = machineToInt(_name);
@@ -44,7 +44,6 @@ int Controller::transit(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs,
                 _selves[veh] = -1;
             }
             else {
-                
                 // This shouldn't happen:
                 // The lock send complete message to the controller, but the controller
                 // thought the lock is being released

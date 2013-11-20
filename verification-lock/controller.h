@@ -16,8 +16,8 @@
 #include <iostream>
 using namespace std;
 
-#include "../statemachine.h"
-#include "../define.h"
+#include "statemachine.h"
+#include "define.h"
 
 class ControllerMessage;
 class ControllerSnapshot ;
@@ -141,7 +141,7 @@ class Controller: public StateMachine
     typedef pair<int,int> Neighbor;
     SeqCtrl* _seqReg ;
 public:
-    Controller( Lookup* msg, Lookup* mac, int num, int delta ) ;        
+    Controller( Lookup* msg, Lookup* mac, int num) ;
     int transit(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs,
                 bool& high_prob, int startIdx ) ;   
     int nullInputTrans(vector<MessageTuple*>& outMsgs,
@@ -167,8 +167,6 @@ private:
     //                   false, vehicle i cannot start a merge
     vector<bool> _actSetting;
     vector<bool> _actives;
-    // The duration of the lock
-    int _delta;
 
     // State variables
     // To record which vehicles are engaged in merge. The sequence of timeout for vehicles
