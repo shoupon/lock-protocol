@@ -12,39 +12,22 @@
 #include <stdexcept>
 using namespace std;
 
-#include "../prob_verify/parser.h"
-#include "../prob_verify/pverify.h"
-#include "../prob_verify/define.h"
-#include "../prob_verify/sync.h"
+#include "parser.h"
+#include "pverify.h"
+#include "define.h"
+#include "sync.h"
 
 #include "lock.h"
 #include "channel.h"
-#include "competitor.h"
 #include "lock_utils.h"
 #include "controller.h"
+#include "lock_service.h"
 
 ProbVerifier pvObj ;
 GlobalState* startPoint;
 
 bool printStop(GlobalState* left, GlobalState* right)
 {
-    /*
-     StoppingState stopZero(left);
-     stopZero.addAllow(new LockSnapshot(-1,-1,-1,-1,0), 1); // lock 0
-     stopZero.addAllow(new LockSnapshot(-1,-1,-1,-1,0), 2); // lock 1
-     stopZero.addAllow(new LockSnapshot(-1,-1,-1,-1,0), 3); // lock 2
-     stopZero.addAllow(new LockSnapshot(-1,-1,-1,-1,0), 4); // lock 3
-     stopZero.addAllow(new LockSnapshot(-1,-1,-1,-1,0), 5); // lock 4
-     stopZero.addAllow(new LockSnapshot(-1,-1,-1,-1,0), 6); // lock 5
-     //stopZero.addAllow(new LockSnapshot(-1,-1,-1,-1,0), 7); // lock 6
-     */
-    /*
-     if( stopZero.match(left) && stopZero.match(right))
-     return true ;
-     //return false;
-     }
-     else
-     return false;*/
     return true;
 }
 
@@ -71,8 +54,8 @@ int main( int argc, char* argv[] )
         vector<bool> active(num, false) ;
         //active[2] = active[4] = active[1] = active[5] = true ;
         //active[2] = active[4] = active[1] = true ;
-        active[2] = active[4] = true ;
-        //active[2] = true ;
+        //active[2] = active[4] = true ;
+        active[2] = true ;
         vector<vector<pair<int,int> > > nbrs(num);
         nbrs[2].push_back(make_pair(0,1)) ;
         nbrs[4].push_back(make_pair(1,3)) ;
@@ -87,12 +70,15 @@ int main( int argc, char* argv[] )
                                         psrPtr->getMacTable() ) );
         Channel* chan = new Channel(num, psrPtr->getMsgTable(),
                                     psrPtr->getMacTable() ) ;
-        
+
         // Add the state machines into ProbVerifier
         pvObj.addMachine(ctrl);
         for( size_t i = 0 ; i < arrLock.size() ; ++i )
             pvObj.addMachine(arrLock[i]);
         pvObj.addMachine(chan);
+        
+        LockService *srvc = new LockService(2,0,1);
+        srvc->reset();
         
         // Specify the starting state
         GlobalState* startPoint = new GlobalState(pvObj.getMachinePtrs());
