@@ -76,25 +76,7 @@ int Lock::transit(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs,
             break;
         
         case 1:
-            if( msg == "RELEASE" ) {
-                if( inMsg->getParam(0) == _m && inMsg->getParam(2) == _ts) {
-                    // Response
-                    MessageTuple* ctrlRes = new LockMessage(0, machineToInt("controller"),
-                                                            0, messageToInt("complete"),
-                                                            _machineId, _id, _m, -1);
-                    outMsgs.push_back(ctrlRes);
-                    // Change state
-                    _current = 0;
-                    reset();
-                    
-                    return 3;
-                }
-                else {
-                    // The RELEASE is not intended for 
-                    return 3;
-                }
-            }
-            else if( msg == "init" ) {
+            if( msg == "init" ) {
                 return 3 ;
             }
             else if( msg == "REQUEST" ) {
@@ -170,7 +152,7 @@ int Lock::transit(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs,
                     return 3;
                 }
             }
-            else if( toRelease(inMsg, outMsgs) ) {
+            else if( toAbort(inMsg, outMsgs) ) {
                 return 3;
             }
             else if( toTimeout(inMsg, outMsgs) ) {
@@ -201,7 +183,7 @@ int Lock::transit(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs,
                     return 3;
                 }
             }
-            else if( toRelease(inMsg, outMsgs) ) {
+            else if( toAbort(inMsg, outMsgs) ) {
                 return 3;
             }
             else if( toTimeout(inMsg, outMsgs) ) {
@@ -232,7 +214,7 @@ int Lock::transit(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs,
                     return 3;
                 }
             }
-            else if( toRelease(inMsg, outMsgs) ) {
+            else if( toAbort(inMsg, outMsgs) ) {
                 return 3;
             }
             else if( toTimeout(inMsg, outMsgs) ) {
@@ -278,24 +260,12 @@ int Lock::nullInputTrans(vector<MessageTuple*>& outMsgs,
                    bool& high_prob, int startIdx)
 {
     outMsgs.clear();
-    int relId = messageToInt("RELEASE");
-    
     if( startIdx == 0 ) {
         if( _current == 4 ) {
             MessageTuple* ctrlRes = new LockMessage(0, machineToInt("controller"),
                                                     0, messageToInt("complete"),
                                                     _machineId, _id, -1, 0);
-            MessageTuple* fRel =
-                new LockMessage(0, machineToInt("channel"),
-                                0, relId, _machineId, _id, _f, _ts);
-            
-            MessageTuple* bRel =
-                new LockMessage(0, machineToInt("channel"),
-                                0, relId, _machineId, _id, _b, _ts);
-            
             outMsgs.push_back(ctrlRes);
-            outMsgs.push_back(fRel);
-            outMsgs.push_back(bRel);
             // Change State
             _current = 0;
             reset();
@@ -304,10 +274,7 @@ int Lock::nullInputTrans(vector<MessageTuple*>& outMsgs,
             
         }
     }
-    
-    
     return -1;
-
 }
 
 void Lock::restore(const StateSnapshot* snapshot)
@@ -352,6 +319,36 @@ MessageTuple* Lock::createResponse(string msg, string dst, MessageTuple* inMsg,
     return ret;
 }
 
+bool Lock::toAbort(MessageTuple *inMsg, vector<MessageTuple *> &outMsgs)
+{
+    string msg = IntToMessage(inMsg->destMsgId() ) ;
+    assert( outMsgs.size() == 0 );
+    
+    int from = inMsg->getParam(0);
+    if( msg == "FAILED" ) {
+        if(inMsg->getParam(2) == _ts ) {
+            if( from == _f ) {
+                outMsgs.push_back(abortMsg());
+            }
+            else if( from == _b ) {
+                outMsgs.push_back(abortMsg());
+            }
+        }
+        else {
+            // ignore the message with wrong timestamp
+            return true ;
+        }
+    }
+    
+    if( outMsgs.size() != 0 ) {
+        _current = 0;
+        reset();
+        return true ;
+    }
+    else
+        return false;
+}
+
 bool Lock::toDeny(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs)
 {
     string msg = IntToMessage(inMsg->destMsgId() ) ;
@@ -367,11 +364,6 @@ bool Lock::toDeny(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs)
         MessageTuple* response = createResponse("FAILED", "channel",
                                                 inMsg, j, newt );
         outMsgs.push_back(response);
-        MessageTuple* ctrlAbt =
-        new LockMessage(0, machineToInt("controller"),
-                        0, messageToInt("abort"),
-                        _machineId, _id, j, -1);
-        outMsgs.push_back(ctrlAbt);
         // Change state
         // no state change
         
@@ -390,40 +382,6 @@ bool Lock::toIgnore(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs)
     }
     
     return false;
-}
-
-bool Lock::toRelease(MessageTuple *inMsg, vector<MessageTuple *> &outMsgs)
-{
-    string msg = IntToMessage(inMsg->destMsgId() ) ;
-    assert( outMsgs.size() == 0 );
-    
-    int from = inMsg->getParam(0);
-    if( msg == "FAILED" ) {
-        if(inMsg->getParam(2) == _ts ) {
-            if( from == _f ) {
-                MessageTuple* rBack = createResponse("RELEASE", "channel",inMsg,_b,_ts);
-                outMsgs.push_back(rBack);
-                outMsgs.push_back(abortMsg());
-            }
-            else if( from == _b ) {
-                MessageTuple* rFront = createResponse("RELEASE", "channel",inMsg,_f,_ts);
-                outMsgs.push_back(rFront);
-                outMsgs.push_back(abortMsg());
-            }
-        }
-        else {
-            // ignore the message with wrong timestamp
-            return true ;
-        }
-    }
-    
-    if( outMsgs.size() != 0 ) {
-        _current = 0;
-        reset();
-        return true ;
-    }
-    else
-        return false;
 }
 
 bool Lock::toTimeout(MessageTuple *inMsg, vector<MessageTuple *> &outMsgs)

@@ -47,9 +47,9 @@ private:
     
     MessageTuple* createResponse(string msg, string dst,
                                  MessageTuple* inMsg, int toward, int time );
+    bool toAbort(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs);
     bool toDeny(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs);
     bool toIgnore(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs);
-    bool toRelease(MessageTuple *inMsg, vector<MessageTuple *> &outMsgs) ;
     bool toTimeout(MessageTuple *inMsg, vector<MessageTuple *> &outMsgs);
     
     LockMessage* abortMsg();
