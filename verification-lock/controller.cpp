@@ -54,6 +54,9 @@ int Controller::transit(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs,
             return 3;
         }
     }
+    else if (msg == "free") {
+        return 3;
+    }
     
     return -1;
 }

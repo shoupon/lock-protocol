@@ -9,22 +9,24 @@
 /* Begin PBXBuildFile section */
 		942FA9D6183C21500006FC91 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 942FA9D5183C21500006FC91 /* main.cpp */; };
 		942FA9D8183C21500006FC91 /* verification_lock.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 942FA9D7183C21500006FC91 /* verification_lock.1 */; };
-		942FA9F8183C224F0006FC91 /* cycle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 942FA9DF183C224F0006FC91 /* cycle.cpp */; };
-		942FA9F9183C224F0006FC91 /* errorstate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 942FA9E2183C224F0006FC91 /* errorstate.cpp */; };
-		942FA9FA183C224F0006FC91 /* fsm.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 942FA9E4183C224F0006FC91 /* fsm.cpp */; };
-		942FA9FB183C224F0006FC91 /* globalstate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 942FA9E6183C224F0006FC91 /* globalstate.cpp */; };
-		942FA9FC183C224F0006FC91 /* parser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 942FA9EA183C224F0006FC91 /* parser.cpp */; };
-		942FA9FD183C224F0006FC91 /* pverify.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 942FA9EC183C224F0006FC91 /* pverify.cpp */; };
-		942FA9FE183C224F0006FC91 /* state.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 942FA9EE183C224F0006FC91 /* state.cpp */; };
-		942FA9FF183C224F0006FC91 /* statemachine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 942FA9F0183C224F0006FC91 /* statemachine.cpp */; };
-		942FAA00183C224F0006FC91 /* stoppingstate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 942FA9F2183C224F0006FC91 /* stoppingstate.cpp */; };
-		942FAA01183C224F0006FC91 /* sync.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 942FA9F4183C224F0006FC91 /* sync.cpp */; };
-		942FAA02183C224F0006FC91 /* transition.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 942FA9F6183C224F0006FC91 /* transition.cpp */; };
 		942FAA0F183C38280006FC91 /* channel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 942FAA04183C38280006FC91 /* channel.cpp */; };
-		942FAA10183C38280006FC91 /* competitor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 942FAA06183C38280006FC91 /* competitor.cpp */; };
 		942FAA11183C38280006FC91 /* controller.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 942FAA08183C38280006FC91 /* controller.cpp */; };
 		942FAA12183C38280006FC91 /* lock_utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 942FAA0B183C38280006FC91 /* lock_utils.cpp */; };
 		942FAA13183C38280006FC91 /* lock.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 942FAA0D183C38280006FC91 /* lock.cpp */; };
+		942FAA29184002DC0006FC91 /* pverify.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 942FAA1B184002DC0006FC91 /* pverify.cpp */; };
+		942FAA2B184002DC0006FC91 /* state.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 942FAA1F184002DC0006FC91 /* state.cpp */; };
+		942FAA2C184002DC0006FC91 /* statemachine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 942FAA21184002DC0006FC91 /* statemachine.cpp */; };
+		942FAA2D184002DC0006FC91 /* stoppingstate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 942FAA23184002DC0006FC91 /* stoppingstate.cpp */; };
+		942FAA2E184002DC0006FC91 /* sync.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 942FAA25184002DC0006FC91 /* sync.cpp */; };
+		942FAA2F184002DC0006FC91 /* transition.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 942FAA27184002DC0006FC91 /* transition.cpp */; };
+		942FAA3E184004B20006FC91 /* cycle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 942FAA31184004B20006FC91 /* cycle.cpp */; };
+		942FAA3F184004B20006FC91 /* errorstate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 942FAA34184004B20006FC91 /* errorstate.cpp */; };
+		942FAA40184004B20006FC91 /* fsm.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 942FAA36184004B20006FC91 /* fsm.cpp */; };
+		942FAA41184004B20006FC91 /* globalstate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 942FAA38184004B20006FC91 /* globalstate.cpp */; };
+		942FAA42184004B20006FC91 /* parser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 942FAA3C184004B20006FC91 /* parser.cpp */; };
+		942FAA4818400CFF0006FC91 /* service.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 942FAA4618400CFF0006FC91 /* service.cpp */; };
+		942FAA4E1843FEE20006FC91 /* lock_service.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 942FAA4C1843FEE20006FC91 /* lock_service.cpp */; };
+		942FAA511843FF340006FC91 /* competitor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 942FAA4F1843FF340006FC91 /* competitor.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -44,43 +46,46 @@
 		942FA9D2183C21500006FC91 /* verification-lock */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "verification-lock"; sourceTree = BUILT_PRODUCTS_DIR; };
 		942FA9D5183C21500006FC91 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		942FA9D7183C21500006FC91 /* verification_lock.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = verification_lock.1; sourceTree = "<group>"; };
-		942FA9DE183C224F0006FC91 /* checker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = checker.h; path = prob_verify/checker.h; sourceTree = SOURCE_ROOT; };
-		942FA9DF183C224F0006FC91 /* cycle.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cycle.cpp; path = prob_verify/cycle.cpp; sourceTree = SOURCE_ROOT; };
-		942FA9E0183C224F0006FC91 /* cycle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = cycle.h; path = prob_verify/cycle.h; sourceTree = SOURCE_ROOT; };
-		942FA9E1183C224F0006FC91 /* define.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = define.h; path = prob_verify/define.h; sourceTree = SOURCE_ROOT; };
-		942FA9E2183C224F0006FC91 /* errorstate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = errorstate.cpp; path = prob_verify/errorstate.cpp; sourceTree = SOURCE_ROOT; };
-		942FA9E3183C224F0006FC91 /* errorstate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = errorstate.h; path = prob_verify/errorstate.h; sourceTree = SOURCE_ROOT; };
-		942FA9E4183C224F0006FC91 /* fsm.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = fsm.cpp; path = prob_verify/fsm.cpp; sourceTree = SOURCE_ROOT; };
-		942FA9E5183C224F0006FC91 /* fsm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = fsm.h; path = prob_verify/fsm.h; sourceTree = SOURCE_ROOT; };
-		942FA9E6183C224F0006FC91 /* globalstate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = globalstate.cpp; path = prob_verify/globalstate.cpp; sourceTree = SOURCE_ROOT; };
-		942FA9E7183C224F0006FC91 /* globalstate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = globalstate.h; path = prob_verify/globalstate.h; sourceTree = SOURCE_ROOT; };
-		942FA9E8183C224F0006FC91 /* lookup.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lookup.h; path = prob_verify/lookup.h; sourceTree = SOURCE_ROOT; };
-		942FA9E9183C224F0006FC91 /* myHash.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = myHash.h; path = prob_verify/myHash.h; sourceTree = SOURCE_ROOT; };
-		942FA9EA183C224F0006FC91 /* parser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = parser.cpp; path = prob_verify/parser.cpp; sourceTree = SOURCE_ROOT; };
-		942FA9EB183C224F0006FC91 /* parser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = parser.h; path = prob_verify/parser.h; sourceTree = SOURCE_ROOT; };
-		942FA9EC183C224F0006FC91 /* pverify.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = pverify.cpp; path = prob_verify/pverify.cpp; sourceTree = SOURCE_ROOT; };
-		942FA9ED183C224F0006FC91 /* pverify.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pverify.h; path = prob_verify/pverify.h; sourceTree = SOURCE_ROOT; };
-		942FA9EE183C224F0006FC91 /* state.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = state.cpp; path = prob_verify/state.cpp; sourceTree = SOURCE_ROOT; };
-		942FA9EF183C224F0006FC91 /* state.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = state.h; path = prob_verify/state.h; sourceTree = SOURCE_ROOT; };
-		942FA9F0183C224F0006FC91 /* statemachine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = statemachine.cpp; path = prob_verify/statemachine.cpp; sourceTree = SOURCE_ROOT; };
-		942FA9F1183C224F0006FC91 /* statemachine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = statemachine.h; path = prob_verify/statemachine.h; sourceTree = SOURCE_ROOT; };
-		942FA9F2183C224F0006FC91 /* stoppingstate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = stoppingstate.cpp; path = prob_verify/stoppingstate.cpp; sourceTree = SOURCE_ROOT; };
-		942FA9F3183C224F0006FC91 /* stoppingstate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = stoppingstate.h; path = prob_verify/stoppingstate.h; sourceTree = SOURCE_ROOT; };
-		942FA9F4183C224F0006FC91 /* sync.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sync.cpp; path = prob_verify/sync.cpp; sourceTree = SOURCE_ROOT; };
-		942FA9F5183C224F0006FC91 /* sync.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sync.h; path = prob_verify/sync.h; sourceTree = SOURCE_ROOT; };
-		942FA9F6183C224F0006FC91 /* transition.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = transition.cpp; path = prob_verify/transition.cpp; sourceTree = SOURCE_ROOT; };
-		942FA9F7183C224F0006FC91 /* transition.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = transition.h; path = prob_verify/transition.h; sourceTree = SOURCE_ROOT; };
 		942FAA04183C38280006FC91 /* channel.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = channel.cpp; sourceTree = "<group>"; };
 		942FAA05183C38280006FC91 /* channel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = channel.h; sourceTree = "<group>"; };
-		942FAA06183C38280006FC91 /* competitor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = competitor.cpp; sourceTree = "<group>"; };
-		942FAA07183C38280006FC91 /* competitor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = competitor.h; sourceTree = "<group>"; };
 		942FAA08183C38280006FC91 /* controller.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = controller.cpp; sourceTree = "<group>"; };
 		942FAA09183C38280006FC91 /* controller.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = controller.h; sourceTree = "<group>"; };
-		942FAA0A183C38280006FC91 /* lock_service.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lock_service.h; sourceTree = "<group>"; };
 		942FAA0B183C38280006FC91 /* lock_utils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = lock_utils.cpp; sourceTree = "<group>"; };
 		942FAA0C183C38280006FC91 /* lock_utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lock_utils.h; sourceTree = "<group>"; };
 		942FAA0D183C38280006FC91 /* lock.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = lock.cpp; sourceTree = "<group>"; };
 		942FAA0E183C38280006FC91 /* lock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lock.h; sourceTree = "<group>"; };
+		942FAA1B184002DC0006FC91 /* pverify.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = pverify.cpp; path = prob_verify/pverify.cpp; sourceTree = SOURCE_ROOT; };
+		942FAA1C184002DC0006FC91 /* pverify.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pverify.h; path = prob_verify/pverify.h; sourceTree = SOURCE_ROOT; };
+		942FAA1F184002DC0006FC91 /* state.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = state.cpp; path = prob_verify/state.cpp; sourceTree = SOURCE_ROOT; };
+		942FAA20184002DC0006FC91 /* state.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = state.h; path = prob_verify/state.h; sourceTree = SOURCE_ROOT; };
+		942FAA21184002DC0006FC91 /* statemachine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = statemachine.cpp; path = prob_verify/statemachine.cpp; sourceTree = SOURCE_ROOT; };
+		942FAA22184002DC0006FC91 /* statemachine.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = statemachine.h; path = prob_verify/statemachine.h; sourceTree = SOURCE_ROOT; };
+		942FAA23184002DC0006FC91 /* stoppingstate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = stoppingstate.cpp; path = prob_verify/stoppingstate.cpp; sourceTree = SOURCE_ROOT; };
+		942FAA24184002DC0006FC91 /* stoppingstate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = stoppingstate.h; path = prob_verify/stoppingstate.h; sourceTree = SOURCE_ROOT; };
+		942FAA25184002DC0006FC91 /* sync.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sync.cpp; path = prob_verify/sync.cpp; sourceTree = SOURCE_ROOT; };
+		942FAA26184002DC0006FC91 /* sync.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sync.h; path = prob_verify/sync.h; sourceTree = SOURCE_ROOT; };
+		942FAA27184002DC0006FC91 /* transition.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = transition.cpp; path = prob_verify/transition.cpp; sourceTree = SOURCE_ROOT; };
+		942FAA28184002DC0006FC91 /* transition.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = transition.h; path = prob_verify/transition.h; sourceTree = SOURCE_ROOT; };
+		942FAA30184004B20006FC91 /* checker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = checker.h; path = prob_verify/checker.h; sourceTree = SOURCE_ROOT; };
+		942FAA31184004B20006FC91 /* cycle.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cycle.cpp; path = prob_verify/cycle.cpp; sourceTree = SOURCE_ROOT; };
+		942FAA32184004B20006FC91 /* cycle.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = cycle.h; path = prob_verify/cycle.h; sourceTree = SOURCE_ROOT; };
+		942FAA33184004B20006FC91 /* define.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = define.h; path = prob_verify/define.h; sourceTree = SOURCE_ROOT; };
+		942FAA34184004B20006FC91 /* errorstate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = errorstate.cpp; path = prob_verify/errorstate.cpp; sourceTree = SOURCE_ROOT; };
+		942FAA35184004B20006FC91 /* errorstate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = errorstate.h; path = prob_verify/errorstate.h; sourceTree = SOURCE_ROOT; };
+		942FAA36184004B20006FC91 /* fsm.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = fsm.cpp; path = prob_verify/fsm.cpp; sourceTree = SOURCE_ROOT; };
+		942FAA37184004B20006FC91 /* fsm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = fsm.h; path = prob_verify/fsm.h; sourceTree = SOURCE_ROOT; };
+		942FAA38184004B20006FC91 /* globalstate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = globalstate.cpp; path = prob_verify/globalstate.cpp; sourceTree = SOURCE_ROOT; };
+		942FAA39184004B20006FC91 /* globalstate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = globalstate.h; path = prob_verify/globalstate.h; sourceTree = SOURCE_ROOT; };
+		942FAA3A184004B20006FC91 /* lookup.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lookup.h; path = prob_verify/lookup.h; sourceTree = SOURCE_ROOT; };
+		942FAA3B184004B20006FC91 /* myHash.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = myHash.h; path = prob_verify/myHash.h; sourceTree = SOURCE_ROOT; };
+		942FAA3C184004B20006FC91 /* parser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = parser.cpp; path = prob_verify/parser.cpp; sourceTree = SOURCE_ROOT; };
+		942FAA3D184004B20006FC91 /* parser.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = parser.h; path = prob_verify/parser.h; sourceTree = SOURCE_ROOT; };
+		942FAA4618400CFF0006FC91 /* service.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = service.cpp; path = ../prob_verify/service.cpp; sourceTree = "<group>"; };
+		942FAA4718400CFF0006FC91 /* service.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = service.h; path = ../prob_verify/service.h; sourceTree = "<group>"; };
+		942FAA4C1843FEE20006FC91 /* lock_service.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = lock_service.cpp; sourceTree = "<group>"; };
+		942FAA4D1843FEE20006FC91 /* lock_service.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lock_service.h; sourceTree = "<group>"; };
+		942FAA4F1843FF340006FC91 /* competitor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = competitor.cpp; sourceTree = "<group>"; };
+		942FAA501843FF340006FC91 /* competitor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = competitor.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -116,12 +121,13 @@
 				942FAA03183C22600006FC91 /* prob_verify */,
 				942FA9D5183C21500006FC91 /* main.cpp */,
 				942FAA04183C38280006FC91 /* channel.cpp */,
+				942FAA4F1843FF340006FC91 /* competitor.cpp */,
+				942FAA501843FF340006FC91 /* competitor.h */,
 				942FAA05183C38280006FC91 /* channel.h */,
-				942FAA06183C38280006FC91 /* competitor.cpp */,
-				942FAA07183C38280006FC91 /* competitor.h */,
+				942FAA4C1843FEE20006FC91 /* lock_service.cpp */,
+				942FAA4D1843FEE20006FC91 /* lock_service.h */,
 				942FAA08183C38280006FC91 /* controller.cpp */,
 				942FAA09183C38280006FC91 /* controller.h */,
-				942FAA0A183C38280006FC91 /* lock_service.h */,
 				942FAA0B183C38280006FC91 /* lock_utils.cpp */,
 				942FAA0C183C38280006FC91 /* lock_utils.h */,
 				942FAA0D183C38280006FC91 /* lock.cpp */,
@@ -134,32 +140,34 @@
 		942FAA03183C22600006FC91 /* prob_verify */ = {
 			isa = PBXGroup;
 			children = (
-				942FA9DE183C224F0006FC91 /* checker.h */,
-				942FA9DF183C224F0006FC91 /* cycle.cpp */,
-				942FA9E0183C224F0006FC91 /* cycle.h */,
-				942FA9E1183C224F0006FC91 /* define.h */,
-				942FA9E2183C224F0006FC91 /* errorstate.cpp */,
-				942FA9E3183C224F0006FC91 /* errorstate.h */,
-				942FA9E4183C224F0006FC91 /* fsm.cpp */,
-				942FA9E5183C224F0006FC91 /* fsm.h */,
-				942FA9E6183C224F0006FC91 /* globalstate.cpp */,
-				942FA9E7183C224F0006FC91 /* globalstate.h */,
-				942FA9E8183C224F0006FC91 /* lookup.h */,
-				942FA9E9183C224F0006FC91 /* myHash.h */,
-				942FA9EA183C224F0006FC91 /* parser.cpp */,
-				942FA9EB183C224F0006FC91 /* parser.h */,
-				942FA9EC183C224F0006FC91 /* pverify.cpp */,
-				942FA9ED183C224F0006FC91 /* pverify.h */,
-				942FA9EE183C224F0006FC91 /* state.cpp */,
-				942FA9EF183C224F0006FC91 /* state.h */,
-				942FA9F0183C224F0006FC91 /* statemachine.cpp */,
-				942FA9F1183C224F0006FC91 /* statemachine.h */,
-				942FA9F2183C224F0006FC91 /* stoppingstate.cpp */,
-				942FA9F3183C224F0006FC91 /* stoppingstate.h */,
-				942FA9F4183C224F0006FC91 /* sync.cpp */,
-				942FA9F5183C224F0006FC91 /* sync.h */,
-				942FA9F6183C224F0006FC91 /* transition.cpp */,
-				942FA9F7183C224F0006FC91 /* transition.h */,
+				942FAA4618400CFF0006FC91 /* service.cpp */,
+				942FAA4718400CFF0006FC91 /* service.h */,
+				942FAA1B184002DC0006FC91 /* pverify.cpp */,
+				942FAA30184004B20006FC91 /* checker.h */,
+				942FAA31184004B20006FC91 /* cycle.cpp */,
+				942FAA32184004B20006FC91 /* cycle.h */,
+				942FAA33184004B20006FC91 /* define.h */,
+				942FAA34184004B20006FC91 /* errorstate.cpp */,
+				942FAA35184004B20006FC91 /* errorstate.h */,
+				942FAA36184004B20006FC91 /* fsm.cpp */,
+				942FAA37184004B20006FC91 /* fsm.h */,
+				942FAA38184004B20006FC91 /* globalstate.cpp */,
+				942FAA39184004B20006FC91 /* globalstate.h */,
+				942FAA3A184004B20006FC91 /* lookup.h */,
+				942FAA3B184004B20006FC91 /* myHash.h */,
+				942FAA3C184004B20006FC91 /* parser.cpp */,
+				942FAA3D184004B20006FC91 /* parser.h */,
+				942FAA1C184002DC0006FC91 /* pverify.h */,
+				942FAA1F184002DC0006FC91 /* state.cpp */,
+				942FAA20184002DC0006FC91 /* state.h */,
+				942FAA21184002DC0006FC91 /* statemachine.cpp */,
+				942FAA22184002DC0006FC91 /* statemachine.h */,
+				942FAA23184002DC0006FC91 /* stoppingstate.cpp */,
+				942FAA24184002DC0006FC91 /* stoppingstate.h */,
+				942FAA25184002DC0006FC91 /* sync.cpp */,
+				942FAA26184002DC0006FC91 /* sync.h */,
+				942FAA27184002DC0006FC91 /* transition.cpp */,
+				942FAA28184002DC0006FC91 /* transition.h */,
 			);
 			name = prob_verify;
 			sourceTree = "<group>";
@@ -215,23 +223,25 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				942FA9F8183C224F0006FC91 /* cycle.cpp in Sources */,
+				942FAA2F184002DC0006FC91 /* transition.cpp in Sources */,
+				942FAA42184004B20006FC91 /* parser.cpp in Sources */,
 				942FA9D6183C21500006FC91 /* main.cpp in Sources */,
-				942FA9FD183C224F0006FC91 /* pverify.cpp in Sources */,
-				942FA9FF183C224F0006FC91 /* statemachine.cpp in Sources */,
-				942FA9FE183C224F0006FC91 /* state.cpp in Sources */,
+				942FAA29184002DC0006FC91 /* pverify.cpp in Sources */,
 				942FAA0F183C38280006FC91 /* channel.cpp in Sources */,
-				942FA9FB183C224F0006FC91 /* globalstate.cpp in Sources */,
-				942FAA02183C224F0006FC91 /* transition.cpp in Sources */,
+				942FAA3E184004B20006FC91 /* cycle.cpp in Sources */,
+				942FAA2B184002DC0006FC91 /* state.cpp in Sources */,
+				942FAA41184004B20006FC91 /* globalstate.cpp in Sources */,
+				942FAA4E1843FEE20006FC91 /* lock_service.cpp in Sources */,
 				942FAA12183C38280006FC91 /* lock_utils.cpp in Sources */,
+				942FAA2E184002DC0006FC91 /* sync.cpp in Sources */,
+				942FAA3F184004B20006FC91 /* errorstate.cpp in Sources */,
+				942FAA2D184002DC0006FC91 /* stoppingstate.cpp in Sources */,
+				942FAA2C184002DC0006FC91 /* statemachine.cpp in Sources */,
+				942FAA40184004B20006FC91 /* fsm.cpp in Sources */,
 				942FAA13183C38280006FC91 /* lock.cpp in Sources */,
-				942FA9FA183C224F0006FC91 /* fsm.cpp in Sources */,
-				942FA9FC183C224F0006FC91 /* parser.cpp in Sources */,
-				942FA9F9183C224F0006FC91 /* errorstate.cpp in Sources */,
-				942FAA10183C38280006FC91 /* competitor.cpp in Sources */,
+				942FAA511843FF340006FC91 /* competitor.cpp in Sources */,
+				942FAA4818400CFF0006FC91 /* service.cpp in Sources */,
 				942FAA11183C38280006FC91 /* controller.cpp in Sources */,
-				942FAA01183C224F0006FC91 /* sync.cpp in Sources */,
-				942FAA00183C224F0006FC91 /* stoppingstate.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

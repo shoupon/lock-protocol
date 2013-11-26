@@ -111,20 +111,11 @@ int Lock::transit(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs,
                     return 3;
                 }
             }
-            else if( msg == "timeout" ) {
-                assert( inMsg->subjectId() == machineToInt("controller") ) ;
-                int time = inMsg->getParam(0);
-                if( time == _ts ) {
-                    // Change state
-                    _current = 0;
-                    reset();
-                }
-                else {
-                    // Ignore the timeout message, since this lock is no longer locked
-                    // by another master
-                }
+            else if( toTimeout(inMsg, outMsgs) ) {
                 return 3;
             }
+            else
+                return 3;
             
         case 2:
             if( msg == "LOCKED" ) {
@@ -174,7 +165,8 @@ int Lock::transit(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs,
                     if( inMsg->getParam(0) == _b ) {
                         // Change state
                         _current = 4;
-                        
+                        outMsgs.push_back(createResponse("success", "controller",
+                                                         inMsg, _id, _ts));
                         return 3;
                     }
                 }
@@ -391,6 +383,8 @@ bool Lock::toTimeout(MessageTuple *inMsg, vector<MessageTuple *> &outMsgs)
     
     if( msg == "timeout" ) {
         if( inMsg->getParam(0) == _ts ) {
+            outMsgs.push_back(createResponse("free", "controller",
+                                             inMsg, _id, _ts));
             _current = 0;
             reset();
             return true;
