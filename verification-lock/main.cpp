@@ -54,8 +54,8 @@ int main( int argc, char* argv[] )
         vector<bool> active(num, false) ;
         //active[2] = active[4] = active[1] = active[5] = true ;
         //active[2] = active[4] = active[1] = true ;
-        //active[2] = active[4] = true ;
-        active[2] = true ;
+        active[2] = active[4] = true ;
+        //active[2] = true ;
         vector<vector<pair<int,int> > > nbrs(num);
         nbrs[2].push_back(make_pair(0,1)) ;
         nbrs[4].push_back(make_pair(1,3)) ;
@@ -77,12 +77,14 @@ int main( int argc, char* argv[] )
             pvObj.addMachine(arrLock[i]);
         pvObj.addMachine(chan);
         
-        LockService *srvc = new LockService(2,0,1);
+        //LockService *srvc = new LockService(2,0,1);
+        Service *srvc = new Service();
         srvc->reset();
         
         // Specify the starting state
         GlobalState* startPoint = new GlobalState(pvObj.getMachinePtrs());
         startPoint->setParser(psrPtr);
+        startPoint->setSevice(srvc);
         
         // Specify the global states in the set RS (stopping states)
         // initial state
