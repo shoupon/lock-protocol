@@ -95,7 +95,6 @@ int LockService::transit(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs,
                 return 3;
             }
             else {
-                printTraversed();
                 assert(false);
             }
             break;
@@ -189,6 +188,8 @@ int LockService::transit(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs,
                 _traversed.insert("50");
                 return 3;
             }
+            else
+                assert(false);
             break;
         default:
             assert(false);
@@ -202,27 +203,28 @@ bool LockService::isMonitored(MessageTuple *inMsg)
     if (Service::isMonitored(inMsg)) {
         // Check m, f, b, deadline here
         string msg = IntToMessage(inMsg->destMsgId() ) ;
+        int to = inMsg->getParam(1);
+        int from = inMsg->getParam(0);
         if (msg == "init") {
             _d = inMsg->getParam(0);
             return true;
+        }
+        else if (msg == "free") {
+            if(from != _m && from != _f && from != _b)
+                return false;
+            else if (to != from)
+                return false;
+            else
+                return true;
         }
         else {
             if (_d != inMsg->getParam(2))
                 return false;
             
-            int to = inMsg->getParam(1);
-            int from = inMsg->getParam(0);
             if (to != _m)
                 return false;
-            if (msg == "success") {
+            else if (msg == "success")
                 return true;
-            }
-            else if (msg == "free") {
-                if(from != _m && from != _f && from != _b)
-                    return false;
-                else
-                    return true;
-            }
             else if (msg == "LOCKED") {
                 if (from != _f && from != _b)
                     return false;
