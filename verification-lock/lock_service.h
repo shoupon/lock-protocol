@@ -11,6 +11,7 @@
 
 #include <iostream>
 #include <string>
+#include <sstream>
 using namespace std;
 
 #include "service.h"
@@ -34,19 +35,23 @@ public:
     LockService(int m, int f, int b);
     int transit(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs,
                 bool& high_prob, int startIdx = 0);
+    void restore(const StateSnapshot* snapshot);
+    ServiceSnapshot* curState();
+    
     bool isMonitored(MessageTuple *inMsg);
 };
 
-class LockServiceSnapshot: public StateSnapshot {
+class LockServiceSnapshot: public ServiceSnapshot {
     friend LockService;
     
     int _ss_m;
     int _ss_f;
     int _ss_b;
     int _ss_d;
-    int _ss_state;
 public:
     LockServiceSnapshot(int m, int f, int b, int d, int state);
+    string toString();
+    ServiceSnapshot* clone() const ;
 };
 
 #endif /* defined(LOCK_SERVICE_H) */
