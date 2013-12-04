@@ -34,7 +34,6 @@ public:
 private:
     const int _id;
     string _name;
-    int _machineId;
     
     int _ts;
     int _f;

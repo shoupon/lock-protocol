@@ -43,7 +43,6 @@ public:
 protected:
     const int _range;
     string _name;
-    int _machineId;
     
     vector<MessageTuple*> _mem;
     

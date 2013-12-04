@@ -10,13 +10,14 @@
 using namespace std;
 
 #include "lock.h"
+#include "sync.h"
 
 Lock::Lock(int k, int num, Lookup* msg, Lookup* mac)
 :_id(k), _range(num), StateMachine(msg,mac)
 {
     // The name of the lock is "lock(i)", where i is the id of the machine
     _name = Lock_Utils::getLockName(_id);
-    _machineId = machineToInt(_name);
+    setId(machineToInt(_name));
     reset();
 }
 
@@ -60,12 +61,13 @@ int Lock::transit(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs,
                 MessageTuple* rBack = createResponse("REQUEST", "channel", inMsg, _b,_ts);
                 outMsgs.push_back(rFront);
                 outMsgs.push_back(rBack);
+                outMsgs.push_back(Sync::setDeadline(inMsg, macId(), _ts));
                 // Change state
                 _current = 2;
                 
                 return 3;
             }
-            else if( msg == "LOCKED" || msg == "FAILED" || msg == "timeout" ) {
+            else if( msg == "LOCKED" || msg == "FAILED" || msg == "DEADLINE" ) {
                 // Do nothing
                 return 3;
             }
@@ -197,7 +199,8 @@ int Lock::transit(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs,
                     if( inMsg->getParam(0) == _f ) {
                         // Change state
                         _current = 4;
-                        
+                        outMsgs.push_back(createResponse("success", "controller",
+                                                         inMsg, _id, _ts));
                         return 3;
                     }
                 }
@@ -251,6 +254,7 @@ int Lock::transit(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs,
 int Lock::nullInputTrans(vector<MessageTuple*>& outMsgs,
                    bool& high_prob, int startIdx)
 {
+    /*
     outMsgs.clear();
     if( startIdx == 0 ) {
         if( _current == 4 ) {
@@ -265,7 +269,7 @@ int Lock::nullInputTrans(vector<MessageTuple*>& outMsgs,
             return 3;
             
         }
-    }
+    }*/
     return -1;
 }
 
@@ -302,12 +306,12 @@ MessageTuple* Lock::createResponse(string msg, string dst, MessageTuple* inMsg,
     int outMsgId = messageToInt(msg);
     int dstId = machineToInt(dst);
     
-    assert(inMsg->destId() == _machineId);
+    assert(inMsg->destId() == macId());
     assert(toward < _range) ;
     
     MessageTuple* ret = new LockMessage(inMsg->subjectId(), dstId,
                                         inMsg->destMsgId(), outMsgId,
-                                        _machineId, _id, toward, time);
+                                        macId(), _id, toward, time);
     return ret;
 }
 
@@ -381,8 +385,10 @@ bool Lock::toTimeout(MessageTuple *inMsg, vector<MessageTuple *> &outMsgs)
     string msg = IntToMessage(inMsg->destMsgId() ) ;
     assert( outMsgs.size() == 0 );
     
-    if( msg == "timeout" ) {
-        if( inMsg->getParam(0) == _ts ) {
+    if( msg == "DEADLINE" ) {
+        assert(typeid(*inMsg) == typeid(SyncMessage)) ;
+        SyncMessage* pmsg = dynamic_cast<SyncMessage*>(inMsg) ;
+        if( pmsg->get_num() == _ts ) {
             outMsgs.push_back(createResponse("free", "controller",
                                              inMsg, _id, _ts));
             _current = 0;
@@ -401,7 +407,7 @@ LockMessage* Lock::abortMsg()
 {
     return new LockMessage(0, machineToInt("controller"),
                            0, messageToInt("abort"),
-                           _machineId, _id, -1, _ts);
+                           macId(), _id, -1, _ts);
 }
 
 LockMessage* LockMessage::clone() const

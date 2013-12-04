@@ -31,8 +31,8 @@ bool printStop(GlobalState* left, GlobalState* right)
     return true;
 }
 
-int nSlaves = 3;
-int nParty = nSlaves + 1;
+int nLocks = 6;
+int nParty = nLocks + 2; // Locks + Controller + Channel
 
 int main( int argc, char* argv[] )
 {
@@ -48,28 +48,31 @@ int main( int argc, char* argv[] )
         pvObj.addMachine(sync);
         
         // Create StateMachine objects
-        int num = 6 ;
         Controller* ctrl = new Controller(psrPtr->getMsgTable(), psrPtr->getMacTable(),
-                                          num);
-        vector<bool> active(num, false) ;
-        //active[2] = active[4] = active[1] = active[5] = true ;
-        //active[2] = active[4] = active[1] = true ;
-        //active[2] = active[4] = true ;
-        active[2] = true ;
-        vector<vector<pair<int,int> > > nbrs(num);
+                                          nLocks);
+        sync->addMachine(ctrl);
+        
+        vector<bool> active(nLocks, false) ;
+        vector<vector<pair<int,int> > > nbrs(nLocks);
         nbrs[2].push_back(make_pair(0,1)) ;
         nbrs[4].push_back(make_pair(1,3)) ;
         nbrs[1].push_back(make_pair(2,4)) ;
         nbrs[5].push_back(make_pair(0,1)) ;
-        ctrl->setActives(active);
+        ctrl->setActives(2);
+        //ctrl->setActives(4);
+        //ctrl->setActives(1);
+        //ctrl->setActives(5);
         ctrl->setNbrs(nbrs);
         
         vector<Lock*> arrLock ;
-        for( size_t i = 0 ; i < num ; ++i )
-            arrLock.push_back( new Lock((int)i,num,psrPtr->getMsgTable(),
+        for( size_t i = 0 ; i < nLocks ; ++i ) {
+            arrLock.push_back( new Lock((int)i,nLocks,psrPtr->getMsgTable(),
                                         psrPtr->getMacTable() ) );
-        Channel* chan = new Channel(num, psrPtr->getMsgTable(),
+            sync->addMachine(arrLock[i]);
+        }
+        Channel* chan = new Channel(nLocks, psrPtr->getMsgTable(),
                                     psrPtr->getMacTable() ) ;
+        sync->addMachine(chan);
 
         // Add the state machines into ProbVerifier
         pvObj.addMachine(ctrl);
@@ -89,116 +92,116 @@ int main( int argc, char* argv[] )
         // Specify the global states in the set RS (stopping states)
         // initial state
         StoppingState stopZero(startPoint);
-        stopZero.addAllow(new LockSnapshot(-1,-1,-1,-1,0), 1); // lock 0
-        stopZero.addAllow(new LockSnapshot(-1,-1,-1,-1,0), 2); // lock 1
-        stopZero.addAllow(new LockSnapshot(-1,-1,-1,-1,0), 3); // lock 2
-        stopZero.addAllow(new LockSnapshot(-1,-1,-1,-1,0), 4); // lock 3
-        stopZero.addAllow(new LockSnapshot(-1,-1,-1,-1,0), 5); // lock 4
-        stopZero.addAllow(new LockSnapshot(-1,-1,-1,-1,0), 6); // lock 5
+        stopZero.addAllow(new LockSnapshot(-1,-1,-1,-1,0), 2); // lock 0
+        stopZero.addAllow(new LockSnapshot(-1,-1,-1,-1,0), 3); // lock 1
+        stopZero.addAllow(new LockSnapshot(-1,-1,-1,-1,0), 4); // lock 2
+        stopZero.addAllow(new LockSnapshot(-1,-1,-1,-1,0), 5); // lock 3
+        stopZero.addAllow(new LockSnapshot(-1,-1,-1,-1,0), 6); // lock 4
+        stopZero.addAllow(new LockSnapshot(-1,-1,-1,-1,0), 7); // lock 5
         //stopZero.addAllow(new ChannelSnapshot(), 7); // channel
         pvObj.addSTOP(&stopZero);
         
         // state LF
         StoppingState stopLF(startPoint);
-        stopLF.addAllow(new LockSnapshot(10,-1,-1,2,0), 1); // lock 0
-        stopLF.addAllow(new LockSnapshot(10,-1,-1,2,0), 2); // lock 1
-        stopLF.addAllow(new LockSnapshot(10,0,1,-1,4), 3); // lock 2
+        stopLF.addAllow(new LockSnapshot(10,-1,-1,2,0), 2); // lock 0
+        stopLF.addAllow(new LockSnapshot(10,-1,-1,2,0), 3); // lock 1
+        stopLF.addAllow(new LockSnapshot(10,0,1,-1,4), 4); // lock 2
         pvObj.addSTOP(&stopLF);
         
         // state FL
         StoppingState stopFL(startPoint);
-        stopFL.addAllow(new LockSnapshot(10,-1,-1,4,1), 2); // lock 1
-        stopFL.addAllow(new LockSnapshot(10,-1,-1,4,1), 4); // lock 3
-        stopFL.addAllow(new LockSnapshot(10,1,3,-1,4), 5); // lock 4
+        stopFL.addAllow(new LockSnapshot(10,-1,-1,4,1), 3); // lock 1
+        stopFL.addAllow(new LockSnapshot(10,-1,-1,4,1), 5); // lock 3
+        stopFL.addAllow(new LockSnapshot(10,1,3,-1,4), 6); // lock 4
         pvObj.addSTOP(&stopFL);
         
         // state 2L: master car2, slaves car3 car5
         StoppingState stop2L(startPoint);
-        stop2L.addAllow(new LockSnapshot(10,2,4,-1,4), 2); // lock 1
-        stop2L.addAllow(new LockSnapshot(10,-1,-1,1,1), 3); // lock 2
-        stop2L.addAllow(new LockSnapshot(10,-1,-1,1,1), 5); // lcok 4
+        stop2L.addAllow(new LockSnapshot(10,2,4,-1,4), 3); // lock 1
+        stop2L.addAllow(new LockSnapshot(10,-1,-1,1,1), 4); // lock 2
+        stop2L.addAllow(new LockSnapshot(10,-1,-1,1,1), 6); // lcok 4
         pvObj.addSTOP(&stop2L);
         
         // state 6L: master car6, slaves car1 car2
         StoppingState stop6L(startPoint);
-        stop6L.addAllow(new LockSnapshot(10,-1,-1,5,1), 1); // lock 0
-        stop6L.addAllow(new LockSnapshot(10,-1,-1,5,1), 2); // lock 1
-        stop6L.addAllow(new LockSnapshot(10,0,1,-1,4), 6); // lock 5
+        stop6L.addAllow(new LockSnapshot(10,-1,-1,5,1), 2); // lock 0
+        stop6L.addAllow(new LockSnapshot(10,-1,-1,5,1), 3); // lock 1
+        stop6L.addAllow(new LockSnapshot(10,0,1,-1,4), 7); // lock 5
         pvObj.addSTOP(&stop6L);
 
         
         // Specify the error states
         // One of the slaves is not locked
         StoppingState lock3FFree(startPoint) ;
-        lock3FFree.addAllow(new LockSnapshot(-1,-1,-1,-1,0), 1); // lock 0 in state 0
-        lock3FFree.addAllow(new LockSnapshot(10,0,1,-1,4), 3); // lock 2 in state 4
+        lock3FFree.addAllow(new LockSnapshot(-1,-1,-1,-1,0), 2); // lock 0 in state 0
+        lock3FFree.addAllow(new LockSnapshot(10,0,1,-1,4), 4); // lock 2 in state 4
         pvObj.addError(&lock3FFree);
         
         StoppingState lock3BFree(startPoint) ;
-        lock3BFree.addAllow(new LockSnapshot(-1,-1,-1,-1,0), 2); // lock 1 in state 0
-        lock3BFree.addAllow(new LockSnapshot(10,0,1,-1,4), 3); // lock 2 in state 4
+        lock3BFree.addAllow(new LockSnapshot(-1,-1,-1,-1,0), 3); // lock 1 in state 0
+        lock3BFree.addAllow(new LockSnapshot(10,0,1,-1,4), 4); // lock 2 in state 4
         pvObj.addError(&lock3BFree);
         
         StoppingState lock5FFree(startPoint) ;
-        lock5FFree.addAllow(new LockSnapshot(-1,-1,-1,-1,0), 2); // lock 1 in state 0
-        lock5FFree.addAllow(new LockSnapshot(10,1,3,-1,4), 5); // lock 4 in state 4
+        lock5FFree.addAllow(new LockSnapshot(-1,-1,-1,-1,0), 3); // lock 1 in state 0
+        lock5FFree.addAllow(new LockSnapshot(10,1,3,-1,4), 6); // lock 4 in state 4
         pvObj.addError(&lock5FFree);
         
         StoppingState lock5BFree(startPoint) ;
-        lock5BFree.addAllow(new LockSnapshot(-1,-1,-1,-1,0), 4); // lock 3 in state 0
-        lock5BFree.addAllow(new LockSnapshot(10,1,3,-1,4), 5); // lock 4 in state 4
+        lock5BFree.addAllow(new LockSnapshot(-1,-1,-1,-1,0), 5); // lock 3 in state 0
+        lock5BFree.addAllow(new LockSnapshot(10,1,3,-1,4), 6); // lock 4 in state 4
         pvObj.addError(&lock5BFree);
         
         StoppingState lock2FFree(startPoint);
-        lock2FFree.addAllow(new LockSnapshot(10,2,4,-1,4), 2); // lock 1 in state 4
-        lock2FFree.addAllow(new LockSnapshot(10,-1,-1,-1,0), 3); // lock 2 in state 0
+        lock2FFree.addAllow(new LockSnapshot(10,2,4,-1,4), 3); // lock 1 in state 4
+        lock2FFree.addAllow(new LockSnapshot(10,-1,-1,-1,0), 4); // lock 2 in state 0
         pvObj.addError(&lock2FFree);
         
         StoppingState lock2BFree(startPoint);
-        lock2BFree.addAllow(new LockSnapshot(10,2,4,-1,4), 2); // lock 1 in state 4
-        lock2BFree.addAllow(new LockSnapshot(10,-1,-1,-1,0), 5); // lock 4 in state 0
+        lock2BFree.addAllow(new LockSnapshot(10,2,4,-1,4), 3); // lock 1 in state 4
+        lock2BFree.addAllow(new LockSnapshot(10,-1,-1,-1,0), 6); // lock 4 in state 0
         pvObj.addError(&lock2BFree);
         
         StoppingState lock6FFree(startPoint) ;
-        lock6FFree.addAllow(new LockSnapshot(-1,-1,-1,-1,0), 1); // lock 0 in state 0
-        lock6FFree.addAllow(new LockSnapshot(10,0,1,-1,4), 6); // lock 5 in state 4
+        lock6FFree.addAllow(new LockSnapshot(-1,-1,-1,-1,0), 2); // lock 0 in state 0
+        lock6FFree.addAllow(new LockSnapshot(10,0,1,-1,4), 7); // lock 5 in state 4
         pvObj.addError(&lock6FFree);
         
         StoppingState lock6BFree(startPoint) ;
-        lock6BFree.addAllow(new LockSnapshot(-1,-1,-1,-1,0), 2); // lock 1 in state 0
-        lock6BFree.addAllow(new LockSnapshot(10,0,1,-1,4), 6); // lock 5 in state 4
+        lock6BFree.addAllow(new LockSnapshot(-1,-1,-1,-1,0), 3); // lock 1 in state 0
+        lock6BFree.addAllow(new LockSnapshot(10,0,1,-1,4), 7); // lock 5 in state 4
         pvObj.addError(&lock6BFree);
         
         // ================
         // Two masters enter state 4: cannot happen
         StoppingState lock35(startPoint) ;
-        lock35.addAllow(new LockSnapshot(10,0,1,-1,4), 3); // lock 2 in state 4
-        lock35.addAllow(new LockSnapshot(10,1,3,-1,4), 5); // lock 4 in state 4
+        lock35.addAllow(new LockSnapshot(10,0,1,-1,4), 4); // lock 2 in state 4
+        lock35.addAllow(new LockSnapshot(10,1,3,-1,4), 6); // lock 4 in state 4
         pvObj.addError(&lock35) ;
         
         StoppingState lock23(startPoint) ;
-        lock23.addAllow(new LockSnapshot(10,2,4,-1,4), 2); // lock 1 in state 4
-        lock23.addAllow(new LockSnapshot(10,0,1,-1,4), 3); // lock 2 in state 4
+        lock23.addAllow(new LockSnapshot(10,2,4,-1,4), 3); // lock 1 in state 4
+        lock23.addAllow(new LockSnapshot(10,0,1,-1,4), 4); // lock 2 in state 4
         pvObj.addError(&lock23) ;
         
         StoppingState lock25(startPoint) ;
-        lock25.addAllow(new LockSnapshot(10,2,4,-1,4), 2); // lock 1 in state 4
-        lock25.addAllow(new LockSnapshot(10,1,3,-1,4), 5); // lock 4 in state 4
+        lock25.addAllow(new LockSnapshot(10,2,4,-1,4), 3); // lock 1 in state 4
+        lock25.addAllow(new LockSnapshot(10,1,3,-1,4), 6); // lock 4 in state 4
         pvObj.addError(&lock25) ;
         
         StoppingState lock26(startPoint) ;
-        lock26.addAllow(new LockSnapshot(10,2,4,-1,4), 2); // lock 1 in state 4
-        lock26.addAllow(new LockSnapshot(10,0,1,-1,4), 6); // lock 5 in state 4
+        lock26.addAllow(new LockSnapshot(10,2,4,-1,4), 3); // lock 1 in state 4
+        lock26.addAllow(new LockSnapshot(10,0,1,-1,4), 7); // lock 5 in state 4
         pvObj.addError(&lock26) ;
         
         StoppingState lock36(startPoint) ;
-        lock36.addAllow(new LockSnapshot(10,0,1,-1,4), 3); // lock 2 in state 4
-        lock36.addAllow(new LockSnapshot(10,0,1,-1,4), 6); // lock 5 in state 4
+        lock36.addAllow(new LockSnapshot(10,0,1,-1,4), 4); // lock 2 in state 4
+        lock36.addAllow(new LockSnapshot(10,0,1,-1,4), 7); // lock 5 in state 4
         pvObj.addError(&lock36) ;
         
         StoppingState lock56(startPoint) ;
-        lock56.addAllow(new LockSnapshot(10,1,3,-1,4), 5); // lock 4 in state 4
-        lock56.addAllow(new LockSnapshot(10,0,1,-1,4), 6); // lock 5 in state 4
+        lock56.addAllow(new LockSnapshot(10,1,3,-1,4), 6); // lock 4 in state 4
+        lock56.addAllow(new LockSnapshot(10,0,1,-1,4), 7); // lock 5 in state 4
         pvObj.addError(&lock56) ;
         
         

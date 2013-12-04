@@ -7,14 +7,14 @@
 //
 
 #include "channel.h"
-#include "controller.h"
+#include "sync.h"
 
 Channel::Channel(int num, Lookup* msg, Lookup* mac)
 : StateMachine(msg,mac), _range(num)
 {
     // The name of the lock is "lock(i)", where i is the id of the machine
     _name = Lock_Utils::getChannelName(num, num) ;
-    _machineId = machineToInt(_name);
+    setId(machineToInt(_name));
 }
 
 int Channel::transit(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs,
@@ -24,9 +24,9 @@ int Channel::transit(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs,
 
     
     string msg = IntToMessage(inMsg->destMsgId() ) ;
-    if( msg == "timeout" ) {
+    if( typeid(*inMsg) == typeid(SyncMessage) ) {
         if( startIdx == 0 ) {
-            assert( typeid(*inMsg) == typeid(ControllerMessage)) ;
+            assert(msg == "DEADLINE") ;
             int time = inMsg->getParam(0);
             // Change state
             // clean up the messages associated with time stamp = time. In reality, the timeout
@@ -165,7 +165,7 @@ MessageTuple* Channel::createDelivery(int idx)
     string lockName = Lock_Utils::getLockName(toward);
     int dstId = machineToInt(lockName) ;
     LockMessage* lockMsgPtr = dynamic_cast<LockMessage*>(msg);
-    ret = new LockMessage(0,dstId,0,outMsgId,_machineId, *lockMsgPtr);
+    ret = new LockMessage(0,dstId,0,outMsgId,macId(), *lockMsgPtr);
     return ret;
 }
 
