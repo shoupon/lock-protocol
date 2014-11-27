@@ -74,7 +74,7 @@ int Controller::nullInputTrans(vector<MessageTuple*>& outMsgs,
                     outMsgs.push_back(initMsg);                    
                     // Change state
                     _busy[i] = _time ;
-                    //_time++;
+                    _time++;
                     return startIdx + 1;
                 }               
             }

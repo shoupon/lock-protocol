@@ -25,6 +25,8 @@ LockService::LockService(int m, int f, int b)
     _fid = machineToInt(_fName);
     _bid = machineToInt(_bName);
     _cid = machineToInt("channel");
+    _mFreed = _fFreed = _bFreed = 1;
+    _stateFreed = -1;
     
     ControllerMessage* initMsg = new ControllerMessage(0,machineToInt(_mName),
                                                        0,messageToInt("init"),
@@ -45,20 +47,20 @@ LockService::LockService(int m, int f, int b)
     _interface.insert(bGranted);
     
     LockMessage* fFree
-        = new LockMessage(machineToInt("controller"), machineToInt("controller"),
-                          messageToInt("timeout"), messageToInt("free"),
+        = new LockMessage(machineToInt("sync"), machineToInt("controller"),
+                          messageToInt("DEADLINE"), messageToInt("free"),
                           _fid, f, m, time);
     _interface.insert(fFree);
     
     LockMessage* bFree
-        = new LockMessage(machineToInt("controller"), machineToInt("controller"),
-                          messageToInt("timeout"), messageToInt("free"),
+        = new LockMessage(machineToInt("sync"), machineToInt("controller"),
+                          messageToInt("DEADLINE"), messageToInt("free"),
                           _bid, b, m, time);
     _interface.insert(bFree);
     
     LockMessage* mFree
-        = new LockMessage(machineToInt("controller"), machineToInt("controller"),
-                          messageToInt("timeout"), messageToInt("free"),
+        = new LockMessage(machineToInt("sync"), machineToInt("controller"),
+                          messageToInt("DEADLINE"), messageToInt("free"),
                           _mid, m, m, time);
     _interface.insert(mFree);
     
@@ -91,6 +93,8 @@ int LockService::transit(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs,
                 _d = inMsg->getParam(0);
                 // Change state
                 _state = 1;
+                _mFreed = 0;
+                assert(_stateFreed<0);
                 _traversed.insert("01");
                 return 3;
             }
@@ -105,11 +109,15 @@ int LockService::transit(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs,
                     int from = inMsg->getParam(0);
                     if (from == _f) {
                         _state = 2;
+                        _fFreed = 0;
+                        assert(_stateFreed<0);
                         _traversed.insert("12");
                         return 3;
                     }
                     else if(from == _b) {
                         _state = 3;
+                        _bFreed = 0;
+                        assert(_stateFreed<0);
                         _traversed.insert("13");
                         return 3;
                     }
@@ -118,8 +126,10 @@ int LockService::transit(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs,
                 }
             }
             else if( msg == "free" ) {
-                reset();
-                _traversed.insert("10");
+                if (free(inMsg->getParam(1), 1)) {
+                    _state = 0;
+                    _traversed.insert("10");
+                }
                 return 3;
             }
             else
@@ -130,6 +140,8 @@ int LockService::transit(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs,
                 if( machineToInt("channel") == inMsg->destId() ) {
                     if( inMsg->getParam(0) == _b ) {
                         _state = 4;
+                        _bFreed = 0;
+                        assert(_stateFreed<0);
                         _traversed.insert("24");
                         return 3;
                     }
@@ -140,8 +152,10 @@ int LockService::transit(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs,
                     assert(false);
             }
             else if( msg == "free" ) {
-                reset();
-                _traversed.insert("20");
+                if (free(inMsg->getParam(1), 2)) {
+                    _state = 0;
+                    _traversed.insert("20");
+                }
                 return 3;
             }
             else
@@ -152,6 +166,8 @@ int LockService::transit(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs,
                 if( machineToInt("channel") == inMsg->destId() ) {
                     if( inMsg->getParam(0) == _f ) {
                         _state = 4;
+                        _fFreed = 0;
+                        assert(_stateFreed<0);
                         _traversed.insert("34");
                         return 3;
                     }
@@ -162,8 +178,10 @@ int LockService::transit(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs,
                     assert(false);
             }
             else if( msg == "free") {
-                reset();
-                _traversed.insert("30");
+                if (free(inMsg->getParam(1), 3)) {
+                    _state = 0;
+                    _traversed.insert("30");
+                }
                 return 3;
             }
             else
@@ -176,16 +194,20 @@ int LockService::transit(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs,
                 return 3;
             }
             else if( msg == "free" ) {
-                reset();
-                _traversed.insert("40");
+                if (free(inMsg->getParam(1), 4)) {
+                    _state = 0;
+                    _traversed.insert("40");
+                }
                 return 3;
             }
             else
                 assert(false);
         case 5:
             if( msg == "free" ){
-                reset() ;
-                _traversed.insert("50");
+                if (free(inMsg->getParam(1), 5)) {
+                    _state = 0;
+                    _traversed.insert("50");
+                }
                 return 3;
             }
             else
@@ -248,15 +270,44 @@ void LockService::restore(const StateSnapshot* snapshot)
 
     _d = ss->_ss_d;
     _state = snapshot->curStateId();
+    _mFreed = ss->_ss_mFreed;
+    _fFreed = ss->_ss_fFreed;
+    _bFreed = ss->_ss_bFreed;
+    _stateFreed = ss->_ss_stateFreed;
+}
+
+bool LockService::free(int i, int state)
+{
+    if (_stateFreed != -1)
+        assert(state == _stateFreed);
+    else
+        _stateFreed = state;
+    
+    if (i == _m)
+        _mFreed = 1;
+    else if (i == _f)
+        _fFreed = 1;
+    else if (i == _b)
+        _bFreed = 1;
+    
+    if (_mFreed & _fFreed & _bFreed) {
+        _stateFreed = -1;
+        return true;
+    }
+    else
+        return false;
 }
 
 ServiceSnapshot* LockService::curState()
 {
-    return new LockServiceSnapshot(_m, _f, _b, _d, _state);
+    return new LockServiceSnapshot(_m, _f, _b, _d, _state,
+                                   _mFreed, _fFreed, _bFreed, _stateFreed);
 }
 
-LockServiceSnapshot::LockServiceSnapshot(int m, int f, int b, int d, int state)
-:ServiceSnapshot(state), _ss_m(m), _ss_f(f), _ss_b(b), _ss_d(d)
+LockServiceSnapshot::LockServiceSnapshot(int m, int f, int b, int d, int state,
+                                         int mf, int ff, int bf, int sf)
+:ServiceSnapshot(state), _ss_m(m), _ss_f(f), _ss_b(b), _ss_d(d),
+ _ss_mFreed(mf), _ss_fFreed(ff), _ss_bFreed(bf), _ss_stateFreed(sf)
 {
     ;
 }
@@ -265,11 +316,14 @@ string LockServiceSnapshot::toString()
 {
     stringstream ss;
     ss << "(" << _ss_m << "," << _ss_f << "," << _ss_b << "," << _ss_d
-       << "," << _ss_state << ")" ;
+       << "," << _ss_state
+       << "," << _ss_mFreed << "," << _ss_fFreed << "," << _ss_bFreed << ")" ;
     return ss.str();
 }
 
 ServiceSnapshot* LockServiceSnapshot::clone() const
 {
-    return new LockServiceSnapshot(_ss_m, _ss_f, _ss_b, _ss_d, _ss_state);
+    return new LockServiceSnapshot(_ss_m, _ss_f, _ss_b, _ss_d, _ss_state,
+                                   _ss_mFreed, _ss_fFreed, _ss_bFreed,
+                                   _ss_stateFreed);
 }

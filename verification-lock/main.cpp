@@ -59,7 +59,7 @@ int main( int argc, char* argv[] )
         nbrs[1].push_back(make_pair(2,4)) ;
         nbrs[5].push_back(make_pair(0,1)) ;
         ctrl->setActives(2);
-        //ctrl->setActives(4);
+        ctrl->setActives(4);
         //ctrl->setActives(1);
         //ctrl->setActives(5);
         ctrl->setNbrs(nbrs);
@@ -80,8 +80,8 @@ int main( int argc, char* argv[] )
             pvObj.addMachine(arrLock[i]);
         pvObj.addMachine(chan);
         
-        LockService *srvc = new LockService(2,0,1);
-        //Service *srvc = new Service();
+        //LockService *srvc = new LockService(2,0,1);
+        Service *srvc = new Service();
         srvc->reset();
         
         // Specify the starting state

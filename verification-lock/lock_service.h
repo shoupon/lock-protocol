@@ -31,6 +31,12 @@ class LockService: public Service {
     int _fid;
     int _bid;
     int _cid;
+    
+    int _mFreed;
+    int _fFreed;
+    int _bFreed;
+    
+    int _stateFreed;
 public:
     LockService(int m, int f, int b);
     int transit(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs,
@@ -39,6 +45,8 @@ public:
     ServiceSnapshot* curState();
     
     bool isMonitored(MessageTuple *inMsg);
+private:
+    bool free(int i, int state);
 };
 
 class LockServiceSnapshot: public ServiceSnapshot {
@@ -48,8 +56,15 @@ class LockServiceSnapshot: public ServiceSnapshot {
     int _ss_f;
     int _ss_b;
     int _ss_d;
+    
+    int _ss_mFreed;
+    int _ss_fFreed;
+    int _ss_bFreed;
+    
+    int _ss_stateFreed;
 public:
-    LockServiceSnapshot(int m, int f, int b, int d, int state);
+    LockServiceSnapshot(int m, int f, int b, int d, int state,
+                        int mf, int ff, int bf, int sf);
     string toString();
     ServiceSnapshot* clone() const ;
 };
