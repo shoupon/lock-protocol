@@ -9,7 +9,7 @@
 #ifndef LOCK_UTILS_H
 #define LOCK_UTILS_H
 
-#include "statemachine.h"
+#include "../prob_verify/statemachine.h"
 
 namespace Lock_Utils {
     

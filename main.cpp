@@ -6,16 +6,15 @@
 //  Copyright (c) 2013 Shou-pon Lin. All rights reserved.
 //
 
-#include <iostream>
-#include <vector>
 #include <exception>
+#include <iostream>
+#include <memory>
 #include <stdexcept>
+#include <vector>
 using namespace std;
 
-#include "parser.h"
-#include "pverify.h"
-#include "define.h"
-#include "sync.h"
+#include "../prob_verify/pverify.h"
+#include "../prob_verify/sync.h"
 
 #include "lock.h"
 #include "channel.h"
@@ -37,19 +36,18 @@ int nParty = nLocks + 2; // Locks + Controller + Channel
 int main( int argc, char* argv[] )
 {
     try {
-        // Declare the names of component machines so as to register these names as id's in
-        // the parser
-        Parser* psrPtr = new Parser() ;
         // Create StateMachine objects
         // Add the state machines into ProbVerifier
         // Register the machines that are triggered by deadline (sync)
-        StateMachine::setLookup(psrPtr->getMsgTable(), psrPtr->getMacTable()) ;
-        Sync* sync = new Sync(nParty, psrPtr->getMsgTable(), psrPtr->getMacTable() );
+        unique_ptr<Lookup> message_lookup(new Lookup());
+        unique_ptr<Lookup> machine_lookup(new Lookup());
+        StateMachine::setLookup(message_lookup.get(), machine_lookup.get());
+        Sync *sync = new Sync(nParty, message_lookup.get(), machine_lookup.get());
         pvObj.addMachine(sync);
         
         // Create StateMachine objects
-        Controller* ctrl = new Controller(psrPtr->getMsgTable(), psrPtr->getMacTable(),
-                                          nLocks);
+        Controller *ctrl = new Controller(message_lookup.get(),
+                                          machine_lookup.get(), nLocks);
         sync->addMachine(ctrl);
         
         vector<bool> active(nLocks, false) ;
@@ -66,12 +64,12 @@ int main( int argc, char* argv[] )
         
         vector<Lock*> arrLock ;
         for( size_t i = 0 ; i < nLocks ; ++i ) {
-            arrLock.push_back( new Lock((int)i,nLocks,psrPtr->getMsgTable(),
-                                        psrPtr->getMacTable() ) );
+            arrLock.push_back(new Lock(i, nLocks, message_lookup.get(),
+                                       machine_lookup.get()));
             sync->addMachine(arrLock[i]);
         }
-        Channel* chan = new Channel(nLocks, psrPtr->getMsgTable(),
-                                    psrPtr->getMacTable() ) ;
+        Channel *chan = new Channel(nLocks, message_lookup.get(),
+                                    machine_lookup.get());
         sync->addMachine(chan);
 
         // Add the state machines into ProbVerifier
@@ -87,7 +85,6 @@ int main( int argc, char* argv[] )
         // Specify the starting state
         GlobalState::setService(srvc);
         GlobalState* startPoint = new GlobalState(pvObj.getMachinePtrs());
-        startPoint->setParser(psrPtr);
         
         // Specify the global states in the set RS (stopping states)
         // initial state
@@ -210,7 +207,7 @@ int main( int argc, char* argv[] )
         
         // Start the procedure of probabilistic verification.
         // Specify the maximum probability depth to be explored
-        pvObj.start(9);
+        pvObj.start(9, startPoint);
         
         // When complete, deallocate all machines
         delete ctrl ;
@@ -223,9 +220,6 @@ int main( int argc, char* argv[] )
         delete srvc;
         
         delete startPoint;
-            
-        delete psrPtr;
-    
 } catch( runtime_error& re ) {
     cerr << "Runtime error:" << endl
     << re.what() << endl ;

@@ -14,8 +14,8 @@
 #include <sstream>
 using namespace std;
 
-#include "service.h"
-#include "statemachine.h"
+#include "../prob_verify/service.h"
+#include "../prob_verify/statemachine.h"
 
 class LockService: public Service {
     const int _m;

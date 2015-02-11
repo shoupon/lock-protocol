@@ -10,7 +10,6 @@
 using namespace std;
 
 #include "lock.h"
-#include "sync.h"
 
 Lock::Lock(int k, int num, Lookup* msg, Lookup* mac)
 :_id(k), _range(num), StateMachine(msg,mac)

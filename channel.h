@@ -14,7 +14,8 @@
 #include <vector>
 using namespace std;
 
-#include "statemachine.h"
+#include "../prob_verify/statemachine.h"
+#include "../prob_verify/sync.h"
 #include "lock.h"
 #include "competitor.h"
 

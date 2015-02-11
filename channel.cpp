@@ -6,8 +6,11 @@
 //  Copyright (c) 2012 Shou-pon Lin. All rights reserved.
 //
 
+#include <string>
+#include <vector>
+using namespace std;
+
 #include "channel.h"
-#include "sync.h"
 
 Channel::Channel(int num, Lookup* msg, Lookup* mac)
 : StateMachine(msg,mac), _range(num)
@@ -41,6 +44,7 @@ int Channel::transit(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs,
                     }
                 }
             }
+            high_prob = false;
             return 3 ;
         }
         else {

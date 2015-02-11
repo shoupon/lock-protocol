@@ -9,7 +9,8 @@
 #ifndef LOCK_H
 #define LOCK_H
 
-#include "statemachine.h"
+#include "../prob_verify/statemachine.h"
+#include "../prob_verify/sync.h"
 #include "lock_utils.h"
 
 class LockMessage;

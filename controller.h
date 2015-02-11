@@ -16,12 +16,10 @@
 #include <iostream>
 using namespace std;
 
-#include "statemachine.h"
-#include "define.h"
+#include "../prob_verify/statemachine.h"
 #include "lock_utils.h"
 #include "competitor.h"
 #include "lock.h"
-#include "define.h"
 
 class ControllerMessage;
 class ControllerSnapshot;
