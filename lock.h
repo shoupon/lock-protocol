@@ -12,47 +12,60 @@
 #include "../prob_verify/statemachine.h"
 #include "../prob_verify/sync.h"
 #include "lock_utils.h"
+#include "clock.h"
+
+#define GRANTED "granted"
+#define DENIED "denied"
+#define FAILED "failed"
+#define REQUEST "request"
+#define RELEASE "release"
+#define SIGNUP "signup"
+#define SIGNOFF "SIGNOFF"
+#define ALARM "ALARM"
+
+#define CHANNEL_NAME "channel"
+#define CLOCK_NAME "clock"
+#define LOCK_NAME "lock"
 
 class LockMessage;
 
-class Lock : public StateMachine
-{
+class Lock : public StateMachine {
+  static int num_locks_;
+  const static int clock_id_;
 public:
-    // Constructor.
-    // k: Identifier of the lock
-    // delta: the duration of the lock
-    // num: total number of vehicles
-    Lock(int k, int num, Lookup* msg, Lookup* mac) ;
-    
-    int transit(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs,
-                        bool& high_prob, int startIdx = 0);
-    int nullInputTrans(vector<MessageTuple*>& outMsgs,
-                               bool& high_prob, int startIdx = 0);
-    void restore(const StateSnapshot* snapshot) ;
-    StateSnapshot* curState() ;
-    void reset() ;
-    
+  // Constructor.
+  // k: Identifier of the lock
+  // delta: the duration of the lock
+  // num: total number of vehicles
+  Lock(int k);
+  Lock(int k, int front, int back);
+  
+  int transit(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs,
+                      bool& high_prob, int startIdx = 0);
+  int nullInputTrans(vector<MessageTuple*>& outMsgs,
+                             bool& high_prob, int startIdx = 0);
+  void restore(const StateSnapshot* snapshot) ;
+  StateSnapshot* curState() ;
+  void reset() ;
+
+  static void setNumLocks(int n_locks) { num_locks_ = n_locks; }
+  
 private:
-    const int _id;
-    string _name;
-    
-    int _ts;
-    int _f;
-    int _b;
-    int _m;
-    
-    int _current;
-    
-    const int _range;
-    
-    MessageTuple* createResponse(string msg, string dst,
-                                 MessageTuple* inMsg, int toward, int time );
-    bool toAbort(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs);
-    bool toDeny(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs);
-    bool toIgnore(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs);
-    bool toTimeout(MessageTuple *inMsg, vector<MessageTuple *> &outMsgs);
-    
-    LockMessage* abortMsg();
+  void initialize();
+
+  MessageTuple* createResponse(MessageTuple* in_msg, const string& msg,
+                               int from, int to);
+  MessageTuple* createTiming(MessageTuple* in_msg, const string& msg,
+                             int creator_id, int my_id);
+
+  const int lock_id_;
+  const bool active_;
+  const int front_;
+  const int back_;
+  int master_;
+
+  string name_;
+  vector<string> channel_names_;
 };
 
 class LockMessage : public MessageTuple
@@ -82,40 +95,34 @@ public:
     size_t numParams() {return 3; }
     int getParam(size_t arg) { return (arg==2)?_t:((arg==1)?_to:_k); }
     
-    string toString() ;
-    
+    string toString();
     LockMessage* clone() const ;
+
+    int getCreator() const { return _k; }
 private:    
     const int _k ;
     const int _to ;
     const int _t;
 };
 
-class LockSnapshot : public StateSnapshot
-{
+class LockSnapshot : public StateSnapshot {
 public:
-    friend class Lock;
-    
-    LockSnapshot(int ts, int front, int back, int master, int state)
-    :_ss_ts(ts), _ss_f(front), _ss_b(back), _ss_m(master), _stateId(state) {}
-    
-    ~LockSnapshot() {} ;
-    int curStateId() const { return _stateId; }
-    // Returns the name of current state as specified in the input file
-    string toString() ;
-    // Cast the Snapshot into a integer. Used in HashTable
-    int toInt() { return ( (_ss_f << 12) + (_ss_b << 8) + (_ss_m << 4 ) )*_ss_m
-                         + _stateId ; }
-    LockSnapshot* clone() const { return new LockSnapshot(_ss_ts, _ss_f,
-                                                          _ss_b, _ss_m, _stateId); }
+  friend class Lock;
+
+  LockSnapshot(int state, int master)
+      : ss_state_(state), ss_master_(master) {}
+  ~LockSnapshot() {} ;
+  int curStateId() const { return ss_state_; }
+  // Returns the name of current state as specified in the input file
+  string toString() ;
+  // Cast the Snapshot into a integer. Used in HashTable
+  int toInt() { return ((ss_master_ << 16) + ss_state_); }
+  LockSnapshot* clone() const { return new LockSnapshot(ss_state_,
+                                                        ss_master_); }
     
 private:
-    int _ss_ts;
-    int _ss_f;
-    int _ss_b;
-    int _ss_m;
-    
-    int _stateId;
+  int ss_state_;
+  int ss_master_;
 };
 
 

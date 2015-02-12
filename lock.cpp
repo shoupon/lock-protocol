@@ -11,403 +11,238 @@ using namespace std;
 
 #include "lock.h"
 
-Lock::Lock(int k, int num, Lookup* msg, Lookup* mac)
-:_id(k), _range(num), StateMachine(msg,mac)
-{
-    // The name of the lock is "lock(i)", where i is the id of the machine
-    _name = Lock_Utils::getLockName(_id);
-    setId(machineToInt(_name));
-    reset();
+const int Lock::clock_id_ = StateMachine::machineToInt(CLOCK_NAME);
+
+Lock::Lock(int k)
+    : lock_id_(k), active_(false), front_(-1), back_(-1) {
+  initialize();
+  reset();
 }
 
+Lock::Lock(int k, int front, int back)
+    : lock_id_(k), active_(true), front_(front), back_(back) {
+  initialize();
+  reset();
+}
 
-int Lock::transit(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs,
-                  bool& high_prob, int startIdx )
-{
-    outMsgs.clear();
+void Lock::initialize() {
+  stringstream ss_lock_name;
+  ss_lock_name << LOCK_NAME << "(" << lock_id_ << ")";
+  name_ = ss_lock_name.str();
+  setId(machineToInt(name_));
+  for (int i = 0; i < num_locks_; ++i) {
+    stringstream ss_channel_name;
+    ss_channel_name << CHANNEL_NAME << "(" << lock_id_ << "," << i << ")";
+    channel_names_.push_back(ss_channel_name.str());
+  }
+}
 
-    if( startIdx != 0 )
-        return -1 ;
-        
-    high_prob = true ;
-    
-    string msg = IntToMessage(inMsg->destMsgId() ) ;
-    switch ( _current ) {
-        case 0 :
-            if( msg == "REQUEST" ) {        // become slave
-                // Assignments
-                int i = inMsg->getParam(0) ;
-                int t = inMsg->getParam(2) ;
-                _ts = t ;
-                _m = i;
-                // Response
-                MessageTuple* response = createResponse("LOCKED", "channel",
-                                                        inMsg, _m, _ts);
-                outMsgs.push_back(response);
-                // Change State
-                _current = 1;
-                
-                return 3;
-            }
-            else if( msg == "init" ) {      // become master
-                assert( inMsg->numParams() == 3 ) ;
-                // Assignments
-                _ts = inMsg->getParam(0);
-                _f = inMsg->getParam(1);
-                _b = inMsg->getParam(2);
-                // Response
-                MessageTuple* rFront = createResponse("REQUEST", "channel", inMsg, _f,_ts);
-                MessageTuple* rBack = createResponse("REQUEST", "channel", inMsg, _b,_ts);
-                outMsgs.push_back(rFront);
-                outMsgs.push_back(rBack);
-                outMsgs.push_back(Sync::setDeadline(inMsg, macId(), _ts));
-                // Change state
-                _current = 2;
-                
-                return 3;
-            }
-            else if( msg == "LOCKED" || msg == "FAILED" || msg == "DEADLINE" ) {
-                // Do nothing
-                return 3;
-            }
-            else if( toIgnore(inMsg,outMsgs) ) {
-                // Do nothing 
-                return 3;
-            }
-            break;
-        
-        case 1:
-            if( msg == "init" ) {
-                return 3 ;
-            }
-            else if( msg == "REQUEST" ) {
-                int j = inMsg->getParam(0) ;
-                
-                if( j == _m ) {
-                    int newTs = inMsg->getParam(2) ;
-                    if( newTs < _ts ) {
-                        // this is not always satisfied when the messages are not delivered
-                        // in the order of their transmission 
-                        // throw logic_error("Newly arrival REQUEST has smaller timestamp");
-                        // ignore the message instead
-                        return 3;
-                    }
-                    /*
-                    // Assignments
-                    // update ts
-                    _ts = newTs ;
-                    
-                    // Response
-                    if( _m != _id ) {
-                        MessageTuple* response = createResponse("LOCKED", "channel",
-                                                                inMsg, _m, _ts);
-                        outMsgs.push_back(response);
-                    } */
-                    // ignore if there are more REQ's from the same master
-                    return 3 ;
-                }
-                else {
-                    toDeny(inMsg, outMsgs);
-                    
-                    return 3;
-                }
-            }
-            else if( toTimeout(inMsg, outMsgs) ) {
-                return 3;
-            }
-            else
-                return 3;
-            
-        case 2:
-            if( msg == "LOCKED" ) {
-                if( inMsg->getParam(2) == _ts ){
-                    if( inMsg->getParam(0) == _f) {
-                        // Change state
-                        _current = 3;
-                        
-                        return 3;
-                    }
-                    else if( inMsg->getParam(0) == _b ) {
-                        // Change state
-                        _current = 13;
-                        
-                        return 3;
-                    }
-                }
-                else {
-#ifdef VERBOSE_ACTIONS
-                    cout << "Received LOCKED from earlier transaction (t="
-                    << inMsg->getParam(2)
-                    << "), current transaction t=" << _t << endl;
-#endif
-                    // Ignore the outdated LOCKED message
-                    return 3;
-                }
-            }
-            else if( toAbort(inMsg, outMsgs) ) {
-                return 3;
-            }
-            else if( toTimeout(inMsg, outMsgs) ) {
-                return 3;
-            }
-            else if( toDeny(inMsg, outMsgs) ) {
-                return 3;
-            }
-            else if( toIgnore(inMsg,outMsgs) ) {
-                // Do nothing
-                return 3;
-            }
-            
-            break;
-            
-        case 3: // State s_3
-            if( msg == "LOCKED" ) {
-                if( inMsg->getParam(2) == _ts ) {
-                    if( inMsg->getParam(0) == _b ) {
-                        // Change state
-                        _current = 4;
-                        outMsgs.push_back(createResponse("success", "controller",
-                                                         inMsg, _id, _ts));
-                        return 3;
-                    }
-                }
-                else {
-                    // outdated LOCKED, ignore
-                    return 3;
-                }
-            }
-            else if( toAbort(inMsg, outMsgs) ) {
-                return 3;
-            }
-            else if( toTimeout(inMsg, outMsgs) ) {
-                return 3;
-            }
-            else if( toDeny(inMsg, outMsgs) ) {
-                return 3;
-            }
-            else if( toIgnore(inMsg,outMsgs) ) {
-                // Do nothing
-                return 3;
-            }
-            
-            break;
-            
-        case 13: // State s_3'
-            if( msg == "LOCKED" ) {
-                if( inMsg->getParam(2) == _ts ) {
-                    if( inMsg->getParam(0) == _f ) {
-                        // Change state
-                        _current = 4;
-                        outMsgs.push_back(createResponse("success", "controller",
-                                                         inMsg, _id, _ts));
-                        return 3;
-                    }
-                }
-                else {
-                    // outdated LOCKED, ignore
-                    return 3;
-                }
-            }
-            else if( toAbort(inMsg, outMsgs) ) {
-                return 3;
-            }
-            else if( toTimeout(inMsg, outMsgs) ) {
-                return 3;
-            }
-            else if( toDeny(inMsg, outMsgs) ) {
-                return 3;
-            }
-            else if( toIgnore(inMsg,outMsgs) ) {
-                // Do nothing
-                return 3;
-            }
-            
-            break;
-            
-        case 4:
-            if( toTimeout(inMsg, outMsgs) ) {
-                return 3;
-            }
-            else if( toDeny(inMsg, outMsgs) ) {
-                return 3;
-            }
-            else if( toIgnore(inMsg,outMsgs) ) {
-                // Do nothing
-                return 3;
-            }
-            else if( msg == "LOCKED" ) {
-                // Simply ignore this message
-                return 3;
-            }
+int Lock::transit(MessageTuple* in_msg, vector<MessageTuple*>& outMsgs,
+                  bool& high_prob, int startIdx) {
+  outMsgs.clear();
 
-            break;
-            
-        default:
-            return -1;
-            break;
-    }
-    
+  if (startIdx)
     return -1;
+  high_prob = true ;
+
+  if (typeid(*in_msg) == typeid(LockMessage)) {
+    LockMessage *lmsg = dynamic_cast<LockMessage *>(in_msg);
+    int from = lmsg->getCreator();
+    string msg = IntToMessage(in_msg->destMsgId());
+    switch (_state) {
+      case 0:
+        if (msg == REQUEST) {
+          master_ = lmsg->getCreator();
+          outMsgs.push_back(createResponse(in_msg, GRANTED, lock_id_, master_));
+          outMsgs.push_back(createTiming(in_msg, SIGNUP, master_, macId()));
+          _state = 1;
+          return 3;
+        } else {
+          // ignore
+          return 3;
+        }
+        break;
+      case 1:
+        if (msg == REQUEST) {
+          outMsgs.push_back(createResponse(in_msg, DENIED, lock_id_,
+                                           lmsg->getCreator()));
+          return 3;
+        } else {
+          return 3;
+        }
+        break;
+      case 2:
+        if (msg == REQUEST)  {
+          outMsgs.push_back(createResponse(in_msg, DENIED, lock_id_,
+                                           lmsg->getCreator()));
+          return 3;
+        } else if (msg == GRANTED) {
+          int from = lmsg->getCreator();
+          if (from == front_) {
+            _state = 3;
+          } else if (from == back_) {
+            _state = 13;
+          } else {
+            assert(false);
+          }
+          return 3;
+        }
+        break;
+      case 3:
+        if (msg == REQUEST)  {
+          outMsgs.push_back(createResponse(in_msg, DENIED, lock_id_,
+                                           lmsg->getCreator()));
+          return 3;
+        } else if (msg == GRANTED) {
+          int from = lmsg->getCreator();
+          if (from == back_)
+            _state = 4;
+          else
+            assert(false);
+          return 3;
+        }
+        break;
+      case 13:
+        if (msg == REQUEST)  {
+          outMsgs.push_back(createResponse(in_msg, DENIED, lock_id_,
+                                           lmsg->getCreator()));
+          return 3;
+        } else if (msg == GRANTED) {
+          int from = lmsg->getCreator();
+          if (from == front_)
+            _state = 4;
+          else
+            assert(false);
+          return 3;
+        }
+        break;
+      case 4:
+        if (msg == REQUEST) {
+          outMsgs.push_back(createResponse(in_msg, DENIED, lock_id_,
+                                           lmsg->getCreator()));
+          return 3;
+        } else {
+          return 3;
+        }
+        break;
+      default:
+        assert(false);
+        break;
+    }
+  } else if (typeid(*in_msg) == typeid(ClockMessage)) {
+    //ClockMessage *cmsg = dynamic_cast<ClockMessage *>(in_msg);
+    string msg = IntToMessage(in_msg->destMsgId());
+    if (msg == ALARM) {
+      _state = 0;
+      return 3;
+    }
+  }
+  return -1;
 }
 
 int Lock::nullInputTrans(vector<MessageTuple*>& outMsgs,
-                   bool& high_prob, int startIdx)
-{
-    /*
-    outMsgs.clear();
-    if( startIdx == 0 ) {
-        if( _current == 4 ) {
-            MessageTuple* ctrlRes = new LockMessage(0, machineToInt("controller"),
-                                                    0, messageToInt("complete"),
-                                                    _machineId, _id, -1, 0);
-            outMsgs.push_back(ctrlRes);
-            // Change State
-            _current = 0;
-            reset();
-            
-            return 3;
-            
-        }
-    }*/
-    return -1;
-}
-
-void Lock::restore(const StateSnapshot* snapshot)
-{
-    assert( typeid(*snapshot) == typeid(LockSnapshot) ) ;
-    
-    const LockSnapshot* sslock = dynamic_cast<const LockSnapshot*>(snapshot);
-    _ts = sslock->_ss_ts;
-    _f = sslock->_ss_f ;
-    _b = sslock->_ss_b ;
-    _m = sslock->_ss_m ;
-    _current = sslock->_stateId;
-}
-
-StateSnapshot* Lock::curState()
-{
-    return new LockSnapshot(_ts, _f, _b, _m, _current);
-}
-
-
-void Lock::reset()
-{
-    _ts = -1 ;
-    _f = -1 ;
-    _b = -1 ;
-    _m = -1 ;
-    _current = 0 ;
-}
-
-MessageTuple* Lock::createResponse(string msg, string dst, MessageTuple* inMsg,
-                                   int toward, int time )
-{
-    int outMsgId = messageToInt(msg);
-    int dstId = machineToInt(dst);
-    
-    assert(inMsg->destId() == macId());
-    assert(toward < _range) ;
-    
-    MessageTuple* ret = new LockMessage(inMsg->subjectId(), dstId,
-                                        inMsg->destMsgId(), outMsgId,
-                                        macId(), _id, toward, time);
-    return ret;
-}
-
-bool Lock::toAbort(MessageTuple *inMsg, vector<MessageTuple *> &outMsgs)
-{
-    string msg = IntToMessage(inMsg->destMsgId() ) ;
-    assert( outMsgs.size() == 0 );
-    
-    int from = inMsg->getParam(0);
-    if( msg == "FAILED" ) {
-        if(inMsg->getParam(2) == _ts ) {
-            if( from == _f ) {
-                outMsgs.push_back(abortMsg());
-            }
-            else if( from == _b ) {
-                outMsgs.push_back(abortMsg());
-            }
-        }
-        else {
-            // ignore the message with wrong timestamp
-            return true ;
-        }
-    }
-    
-    if( outMsgs.size() != 0 ) {
+                         bool& high_prob, int startIdx) {
+  switch (_state) {
+    case 0:
+      if (!startIdx && active_) {
+        outMsgs.push_back(createResponse(nullptr, REQUEST, lock_id_, front_));
+        outMsgs.push_back(createResponse(nullptr, REQUEST, lock_id_, back_));
+        outMsgs.push_back(createTiming(nullptr, SIGNUP, lock_id_, macId()));
+        _state = 2;
+        return 3;
+      } else {
+        return -1;
+      }
+      break;
+#ifdef RELEASING
+    case 2:  // releasing
+      if (!startIdx) {
+        outMsgs.push_back(createTiming(nullptr, SIGNOFF, lock_id_, macId()));
         _current = 0;
-        reset();
-        return true ;
-    }
-    else
-        return false;
+        return 3;
+      } else {
+        return -1;
+      }
+      break;
+    case 3:  // releasing
+      if (!startIdx) {
+        outMsgs.push_back(createResponse(nullptr, RELEASE, lock_id_, front_));
+        outMsgs.push_back(createTiming(nullptr, SIGNOFF, lock_id_, macId()));
+        _current = 0;
+        return 3;
+      } else {
+        return -1;
+      }
+      break;
+    case 13:
+      if (!startIdx) {
+        outMsgs.push_back(createResponse(nullptr, RELEASE, lock_id_, back_));
+        outMsgs.push_back(createTiming(nullptr, SIGNOFF, lock_id_, macId()));
+        _current = 0;
+        return 3;
+      } else {
+        return -1;
+      }
+      break;
+    case 4:
+      if (!startIdx) {
+        outMsgs.push_back(createResponse(nullptr, RELEASE, lock_id_, front_));
+        outMsgs.push_back(createResponse(nullptr, RELEASE, lock_id_, back_));
+        outMsgs.push_back(createTiming(nullptr, SIGNOFF, lock_id_, macId()));
+        _current = 0;
+        return 3;
+      } else {
+        return -1;
+      }
+      break;
+#endif
+    default:
+      break;
+  }
+  return -1;
 }
 
-bool Lock::toDeny(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs)
-{
-    string msg = IntToMessage(inMsg->destMsgId() ) ;
-    assert( outMsgs.size() == 0 );
-    
-    if( msg == "REQUEST" ) {
-        // Assignments
-        int newt = inMsg->getParam(2); // extract timestamp
-        int j = inMsg->getParam(0) ; // extract id of the source lock
-        
-        // False
-        // Response
-        MessageTuple* response = createResponse("FAILED", "channel",
-                                                inMsg, j, newt );
-        outMsgs.push_back(response);
-        // Change state
-        // no state change
-        
-        return true;
-    }
-    return false;
+void Lock::restore(const StateSnapshot* snapshot) {
+  assert( typeid(*snapshot) == typeid(LockSnapshot) ) ;
+  const LockSnapshot* sslock = dynamic_cast<const LockSnapshot*>(snapshot);
+  _state = sslock->ss_state_;
+  master_ = sslock->ss_master_;
 }
 
-bool Lock::toIgnore(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs)
-{
-    string msg = IntToMessage(inMsg->destMsgId() ) ;
-    assert( outMsgs.size() == 0 );
-    
-    if( msg == "RELEASE" ) {
-        return true;
-    }
-    
-    return false;
+StateSnapshot* Lock::curState() {
+  return new LockSnapshot(_state, master_);
 }
 
-bool Lock::toTimeout(MessageTuple *inMsg, vector<MessageTuple *> &outMsgs)
-{
-    string msg = IntToMessage(inMsg->destMsgId() ) ;
-    assert( outMsgs.size() == 0 );
-    
-    if( msg == "DEADLINE" ) {
-        assert(typeid(*inMsg) == typeid(SyncMessage)) ;
-        SyncMessage* pmsg = dynamic_cast<SyncMessage*>(inMsg) ;
-        if( pmsg->get_num() == _ts ) {
-            outMsgs.push_back(createResponse("free", "controller",
-                                             inMsg, _id, _ts));
-            _current = 0;
-            reset();
-            return true;
-        }
-        else {
-            return true ;
-        }
-    }
-    
-    return false ;
+
+void Lock::reset() {
+  _state = 0;
+  master_ = -1;
 }
 
-LockMessage* Lock::abortMsg()
-{
-    return new LockMessage(0, machineToInt("controller"),
-                           0, messageToInt("abort"),
-                           macId(), _id, -1, _ts);
+MessageTuple* Lock::createResponse(MessageTuple* in_msg,
+                                   const string& msg, int from, int to) {
+  //int dest_id = channel_mac_id[to];
+  int dest_id = machineToInt(CHANNEL_NAME);
+  if (in_msg)
+    return new LockMessage(in_msg->subjectId(), dest_id,
+                           in_msg->destMsgId(), messageToInt(msg),
+                           macId(), from, to, -1);
+  else
+    return new LockMessage(0, dest_id, 0, messageToInt(msg),
+                           macId(), from, to, -1);
 }
+
+MessageTuple* Lock::createTiming(MessageTuple* in_msg, const string& msg,
+                                 int creator_id, int my_id) {
+  if (in_msg)
+    return new ClockMessage(in_msg->subjectId(), clock_id_,
+                            in_msg->destMsgId(), messageToInt(msg),
+                            macId(), creator_id, my_id);
+  else
+    return new ClockMessage(0, clock_id_, 0, messageToInt(msg),
+                            macId(), creator_id, my_id);
+}
+
 
 LockMessage* LockMessage::clone() const
 {
