@@ -1,226 +1,206 @@
 //
-//  channel.cpp
-//  Prob_verify
+//  ya_channel.cpp
+//  lock-protocol
 //
-//  Created by Shou-pon Lin on 8/29/12.
-//  Copyright (c) 2012 Shou-pon Lin. All rights reserved.
+//  Created by Shou-pon Lin on 2/11/15
+//  Copyright (c) 2015 Shou-pon Lin. All rights reserved.
 //
-
-#include <string>
-#include <vector>
-using namespace std;
 
 #include "channel.h"
 
-Channel::Channel(int num, Lookup* msg, Lookup* mac)
-: StateMachine(msg,mac), _range(num)
-{
-    // The name of the lock is "lock(i)", where i is the id of the machine
-    _name = Lock_Utils::getChannelName(num, num) ;
-    setId(machineToInt(_name));
+Channel::Channel(int from, int to1, int to2)
+    : src_lock_id_(from) {
+  vector<int> tos;
+  tos.push_back(to1);
+  tos.push_back(to2);
+  initialize(tos);
 }
 
-int Channel::transit(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs,
-                     bool& high_prob, int startIdx)
-{
-    outMsgs.clear();
+Channel::Channel(int from, const vector<int>& tos)
+    : src_lock_id_(from) {
+  initialize(tos);
+}
 
-    
-    string msg = IntToMessage(inMsg->destMsgId() ) ;
-    if( typeid(*inMsg) == typeid(SyncMessage) ) {
-        if( startIdx == 0 ) {
-            assert(msg == "DEADLINE") ;
-            int time = inMsg->getParam(0);
-            // Change state
-            // clean up the messages associated with time stamp = time. In reality, the timeout
-            // messages are ignored at machine Lock. It is of convenience to implement ignoring
-            // message at channel
-            for( int i = 0 ; i < _mem.size() ; ++i ) {
-                if( typeid( *(_mem[i])) == typeid(LockMessage)) {
-                    if( _mem[i]->getParam(2) == time ) {
-                        delete _mem[i] ;
-                        _mem.erase(_mem.begin()+i) ;
-                        i--;
-                    }
-                }
-            }
-            high_prob = false;
-            return 3 ;
-        }
-        else {
-            return -1;
-        }
-    }
-    else {
-        // Channel is empty
-        if( startIdx == 0 ) {
-            // Transimission succeeds
-            high_prob = true ;
-            // Change state
-            _mem.push_back( inMsg->clone() );
-            return 1;
-        }
-        else if( startIdx == 1 ) {
-            // Message loss
-            high_prob = false;
-            // channel content remains the same
-            return 2;
-        }
-        else if(startIdx >=2 ) {
-            return -1;
-        }
-        else {
-            return -1;
-        }
-    }
+int Channel::transit(MessageTuple *inMsg, vector<MessageTuple*> &outMsgs,
+                     bool &high_prob, int startIdx) {
+  outMsgs.clear();
+
+  if (startIdx >= num_combinations_ || startIdx < 0)
     return -1;
-}
 
-int Channel::nullInputTrans(vector<MessageTuple*>& outMsgs, bool& high_prob, int startIdx)
-{
-    outMsgs.clear() ;
-    high_prob = true ;
-
-    if( !_mem.empty() ) {
-        if( startIdx == 0 ) {
-            // Create message
-            MessageTuple* msg = createDelivery(0) ;
-            outMsgs.push_back(msg);
-
-            // Change state
-            delete _mem.front();
-            _mem.erase(_mem.begin()) ;
-            
-            high_prob = true ;
-            return 1;
-        }
-        else if( startIdx > 0 && startIdx < _mem.size() && startIdx < MAX_OUT_ORDER + 1) {
-            // Create message
-            MessageTuple* msg = createDelivery(startIdx) ;
-            outMsgs.push_back(msg);
-            
-            // Change state
-            delete _mem[startIdx];
-            _mem.erase(_mem.begin()+startIdx) ;
-            
-            high_prob = false ;
-            return startIdx+1;
-        }
-        else {
-            return -1;
-        }
+  string msg = IntToMessage(inMsg->destMsgId());
+  if (msg == DEADLINE) {
+    if (!startIdx) {
+      if (msg_in_transit_) {
+        high_prob = false;
+      } else {
+        high_prob = true;
+      }
+      reset();
+      return 2;
+    } else {
+      return -1;
     }
-    else {
-        return -1;
+  } else if (typeid(*inMsg) == typeid(LockMessage)) {
+    // only allow one message in channel at a time
+    // Site does not send more than one message in one period
+    assert(!msg_in_transit_);
+
+    LockMessage* lMsg = dynamic_cast<LockMessage*>(inMsg);
+    msg_in_transit_.reset(new LockMessage(*lMsg));
+    deadline_ = lMsg->getTime();
+
+    if (startIdx) {
+      high_prob = false;
+    } else {
+      high_prob = true;
     }
-}
 
-void Channel::restore(const StateSnapshot* snapshot)
-{
-    assert( typeid(*snapshot) == typeid(ChannelSnapshot));
-    const ChannelSnapshot* css = dynamic_cast<const ChannelSnapshot*>(snapshot) ;
-    
-    if( css->_ss_mem.empty() )
-        clearMem(_mem) ;
-    else
-        copyMem(css->_ss_mem, _mem);
-}
-
-StateSnapshot* Channel::curState()
-{
-    if( _mem.empty() )
-        return new ChannelSnapshot();
-    else
-        return new ChannelSnapshot(_mem);
-}
-
-void Channel::reset()
-{
-    clearMem(_mem);
-}
-
-void Channel::copyMem(const vector<MessageTuple*>& fifo, vector<MessageTuple*>& dest)
-{
-    clearMem(dest);
-    dest.resize(fifo.size()) ;
-    
-    for( size_t i = 0 ; i < fifo.size() ; ++i ) {
-        dest[i] = fifo[i]->clone() ;
+    int k = startIdx;
+    for (int i = 0; i < msg_exist_.size(); ++i) {
+      if (k & 1)
+        msg_exist_[i] = false;
+      else
+        msg_exist_[i] = true;
+      k >>= 1;
     }
+
+    return startIdx + 1;
+  } else {
+    assert(false); // there shouldn't be other type of messages
+  }
 }
-void Channel::clearMem(vector<MessageTuple*>& fifo)
-{
-    for( size_t i = 0 ; i < fifo.size() ; ++i ) {
-        delete fifo[i];
+
+int Channel::nullInputTrans(vector<MessageTuple*>& outMsgs,
+                            bool& high_prob, int startIdx) {
+  outMsgs.clear();
+  high_prob = true;
+
+  if (startIdx)
+    return -1;
+
+  if (!msg_in_transit_)
+    return -1;
+
+  int skip = startIdx;
+  for (int i = 0; i < msg_exist_.size(); ++i) {
+    if (msg_exist_[i] && skip--) {
+      outMsgs.push_back(new LockMessage(0, machineToInt(dest_names_[i]),
+                                        0, msg_in_transit_->destMsgId(),
+                                        macId(), *msg_in_transit_));
+      msg_exist_[i] = 0;
+      break;
     }
-    fifo.clear() ;
+  }
+
+  if (outMsgs.empty()) {
+    return -1;
+  } else {
+    int remain = 0;
+    for (auto e : msg_exist_)
+      if (e)
+        remain = 1;
+    if (remain)
+      deadline_ = -1;
+    return startIdx + 1;
+  }
+} 
+
+void Channel::restore(const StateSnapshot *snapshot) {
+  assert(typeid(*snapshot) == typeid(ChannelSnapshot));
+  const ChannelSnapshot *css = dynamic_cast<const ChannelSnapshot*>(snapshot);
+  assert(msg_exist_.size() == css->ss_exist_.size());
+  if (css->ss_msg_) {
+    msg_in_transit_.reset(new LockMessage(*(css->ss_msg_)));
+  } else {
+    msg_in_transit_.reset(0);
+  }
+  msg_exist_ = css->ss_exist_;
+  deadline_ = css->ss_deadline_;
 }
 
-MessageTuple* Channel::createDelivery(int idx)
-{
-    if( _mem.empty() )
-        return 0;
-    
-    MessageTuple* msg = _mem[idx] ;
-    int outMsgId = msg->destMsgId();
-    int toward = msg->getParam(1);
-    
-    MessageTuple* ret ;
-    string lockName = Lock_Utils::getLockName(toward);
-    int dstId = machineToInt(lockName) ;
-    LockMessage* lockMsgPtr = dynamic_cast<LockMessage*>(msg);
-    ret = new LockMessage(0,dstId,0,outMsgId,macId(), *lockMsgPtr);
-    return ret;
+StateSnapshot* Channel::curState() {
+  if (msg_in_transit_)
+    return new ChannelSnapshot(msg_in_transit_.get(), msg_exist_, deadline_);
+  else
+    return new ChannelSnapshot(msg_exist_, deadline_);
 }
 
-ChannelSnapshot::ChannelSnapshot( const ChannelSnapshot& item )
-{
-    if( !item._ss_mem.empty() )
-        Channel::copyMem(item._ss_mem, _ss_mem);
+void Channel::reset() {
+  msg_in_transit_.reset(0);
+  for (int i = 0; i < msg_exist_.size(); ++i)
+    msg_exist_[i] = true;
+  deadline_ = -1;
 }
 
-ChannelSnapshot::ChannelSnapshot( const vector<MessageTuple*>& fifo)
-{
-    if( !fifo.empty())
-        Channel::copyMem(fifo, _ss_mem);
+void Channel::initialize(const vector<int>& tos) {
+  stringstream src_ss;
+  src_ss << LOCK_NAME << "(" << src_lock_id_ << ")";
+  src_name_ = src_ss.str();
+  stringstream dest_ids_ss;
+
+  num_combinations_ = 1;
+  int k = 0;
+  for (auto i : tos) {
+    if (k++)
+      dest_ids_ss << ",";
+    dest_ids_ss << i;
+    stringstream dest_ss;
+    dest_ss << LOCK_NAME << "(" << i << ")";
+    dest_names_.push_back(string());
+    dest_ss >> dest_names_.back();
+    num_combinations_ <<= 1;
+    msg_exist_.push_back(true);
+  }
+  stringstream channel_ss;
+  channel_ss << CHANNEL_NAME << "(" << src_lock_id_ << ")";
+  channel_name_ = channel_ss.str();
+
+  setId(machineToInt(channel_name_));
+  reset();
 }
 
-int ChannelSnapshot::curStateId() const
-{
-    if( !_ss_mem.empty() )
-        return _ss_mem.front()->destMsgId();
-    else
-        return 0;
+int ChannelSnapshot::curStateId() const {
+  if (ss_msg_)
+    return 1;
+  else 
+    return 0;
 }
 
-string ChannelSnapshot::toString()
-{
-    stringstream ss ;
-    ss << "(" ;
-
-    for( size_t i  = 0 ; i < _ss_mem.size() ; ++i ) {
-        ss << _ss_mem[i]->toString() ;
-        if( i != _ss_mem.size()-1 )
-            ss << "," ;
+string ChannelSnapshot::toString() {
+  stringstream ss;
+  if (ss_msg_) {
+    int k = 0;
+    for (int i = 0; i < ss_exist_.size(); ++i) {
+      if (k++)
+        ss << ",";
+      ss << ss_exist_[i];
     }
-    ss << ")" ;
-        
-    return ss.str() ;
+    ss << ":" << ss_deadline_;
+    return string("[") + ss_msg_->toString() + "]:" + ss.str();
+  } else {
+    return "[]";
+  }
 }
 
-int ChannelSnapshot::toInt()
-{ 
-    if( !_ss_mem.empty() ) {
-        int ret = 0 ;
-        for( size_t i = 0 ; i < _ss_mem.size() ; ++i ) {
-            ret += _ss_mem[i]->destMsgId() ;
-            ret = ret << 4 ;
-            ret += _ss_mem[i]->destId() ;
-            ret = ret << 4 ;
-        }
-        return ret * (int)_ss_mem.size() ;
-    }
-    else
-        return 0 ;
+int ChannelSnapshot::toInt() {
+  return ss_msg_->subjectId();
 }
 
+StateSnapshot* ChannelSnapshot::clone() const {
+  if (ss_msg_)
+    return new ChannelSnapshot(ss_msg_.get(), ss_exist_, ss_deadline_);
+  else
+    return new ChannelSnapshot(ss_exist_, ss_deadline_);
+}
+
+bool ChannelSnapshot::match(StateSnapshot* other) {
+  assert(typeid(*other) == typeid(ChannelSnapshot));
+  ChannelSnapshot *other_ss = dynamic_cast<ChannelSnapshot*>(other);
+  if (!ss_msg_)
+    return !other_ss->ss_msg_;
+  else
+    return *ss_msg_ == *(other_ss->ss_msg_) &&
+           ss_exist_ == other_ss->ss_exist_ &&
+           ss_deadline_ == other_ss->ss_deadline_;
+}

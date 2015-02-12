@@ -68,15 +68,18 @@ int main( int argc, char* argv[] )
                                        machine_lookup.get()));
             sync->addMachine(arrLock[i]);
         }
-        Channel *chan = new Channel(nLocks, message_lookup.get(),
-                                    machine_lookup.get());
-        sync->addMachine(chan);
+        vector<Channel*> channels;
+        channels.push_back(new Channel(2, 0, 1));
+        channels.push_back(new Channel(4, 1, 3));
+        channels.push_back(new Channel(1, 2, 4));
+        channels.push_back(new Channel(5, 0, 1));
+        for (auto c_ptr : channels)
+          sync->addMachine(c_ptr);
 
         // Add the state machines into ProbVerifier
         pvObj.addMachine(ctrl);
         for( size_t i = 0 ; i < arrLock.size() ; ++i )
             pvObj.addMachine(arrLock[i]);
-        pvObj.addMachine(chan);
         
         //LockService *srvc = new LockService(2,0,1);
         Service *srvc = new Service();
@@ -211,9 +214,10 @@ int main( int argc, char* argv[] )
         
         // When complete, deallocate all machines
         delete ctrl ;
-        for( size_t i = 0 ; i < arrLock.size() ; ++i )
-            delete arrLock[i];
-        delete chan ;
+        for (auto l_ptr : arrLock)
+          delete l_ptr;
+        for (auto c_ptr : channels)
+          delete c_ptr;
         delete sync;
         
         srvc->printTraversed();

@@ -80,11 +80,12 @@ public:
     ~LockMessage() {}
     
     size_t numParams() {return 3; }
-    int getParam(size_t arg) { return (arg==2)?_t:((arg==1)?_to:_k); }
     
     string toString() ;
     
     LockMessage* clone() const ;
+
+    int getTime() { return _t; }
 private:    
     const int _k ;
     const int _to ;
