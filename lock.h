@@ -13,19 +13,7 @@
 #include "../prob_verify/sync.h"
 #include "lock_utils.h"
 #include "clock.h"
-
-#define GRANTED "granted"
-#define DENIED "denied"
-#define FAILED "failed"
-#define REQUEST "request"
-#define RELEASE "release"
-#define SIGNUP "signup"
-#define SIGNOFF "SIGNOFF"
-#define ALARM "ALARM"
-
-#define CHANNEL_NAME "channel"
-#define CLOCK_NAME "clock"
-#define LOCK_NAME "lock"
+#include "identifiers.h"
 
 class LockMessage;
 
@@ -35,8 +23,6 @@ class Lock : public StateMachine {
 public:
   // Constructor.
   // k: Identifier of the lock
-  // delta: the duration of the lock
-  // num: total number of vehicles
   Lock(int k);
   Lock(int k, int front, int back);
   
@@ -66,43 +52,33 @@ private:
 
   string name_;
   vector<string> channel_names_;
+  vector<int> channel_mac_ids_;
 };
 
 class LockMessage : public MessageTuple
 {
 public:
-    // Constructor: src, dest, srcMsg, destMsg, subject all retain the same implication as
-    // is ancestor, MessageTuple;
-    // k: the ID of the source lock
-    // lock: the ID of the destination competitor. (exception: when the message is
-    // "complete", which is to notify the controller that the lock is released, the field
-    // is used to tell the controller which competitor this lock was associated to
-    LockMessage(int src, int dest, int srcMsg, int destMsg, int subject, int k,
-                int to, int t)
-    :MessageTuple(src, dest, srcMsg, destMsg, subject), _k(k), _to(to), _t(t) {}
-    
-    LockMessage( const LockMessage& msg )
-    :MessageTuple(msg._src, msg._dest, msg._srcMsg, msg._destMsg, msg._subject)
-    , _k(msg._k), _to(msg._to), _t(msg._t) {}
-    
-    LockMessage(int src, int dest, int srcMsg, int destMsg, int subject,
-                      const LockMessage& msg)
-    :MessageTuple(src, dest, srcMsg, destMsg, subject)
-    , _k(msg._k), _to(msg._to), _t(msg._t) {}
-    
-    ~LockMessage() {}
-    
-    size_t numParams() {return 3; }
-    int getParam(size_t arg) { return (arg==2)?_t:((arg==1)?_to:_k); }
-    
-    string toString();
-    LockMessage* clone() const ;
+  LockMessage(int src, int dest, int srcMsg, int destMsg, int subject,
+              int master)
+      : MessageTuple(src, dest, srcMsg, destMsg, subject), master_(master) {}
+  LockMessage(const LockMessage& msg)
+      : MessageTuple(msg._src, msg._dest,
+                     msg._srcMsg, msg._destMsg, msg._subject),
+        master_(msg.master_) {}
+  LockMessage(int src, int dest, int srcMsg, int destMsg, int subject,
+              const LockMessage& msg)
+      : MessageTuple(src, dest, srcMsg, destMsg, subject),
+        master_(msg.master_) {}
+  ~LockMessage() {}
+  size_t numParams() { return 1; }
+  int getParam(size_t arg) { return master_; }
+  
+  string toString();
+  LockMessage* clone() const ;
 
-    int getCreator() const { return _k; }
+  int getCreator() const { return master_; }
 private:    
-    const int _k ;
-    const int _to ;
-    const int _t;
+  const int master_;
 };
 
 class LockSnapshot : public StateSnapshot {

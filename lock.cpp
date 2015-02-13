@@ -34,6 +34,7 @@ void Lock::initialize() {
     stringstream ss_channel_name;
     ss_channel_name << CHANNEL_NAME << "(" << lock_id_ << "," << i << ")";
     channel_names_.push_back(ss_channel_name.str());
+    channel_mac_ids_.push_back(machineToInt(channel_names_.back()));
   }
 }
 
@@ -221,15 +222,16 @@ void Lock::reset() {
 
 MessageTuple* Lock::createResponse(MessageTuple* in_msg,
                                    const string& msg, int from, int to) {
-  //int dest_id = channel_mac_id[to];
-  int dest_id = machineToInt(CHANNEL_NAME);
-  if (in_msg)
-    return new LockMessage(in_msg->subjectId(), dest_id,
-                           in_msg->destMsgId(), messageToInt(msg),
-                           macId(), from, to, -1);
-  else
+  int dest_id = channel_mac_ids_[to];
+  if (in_msg) {
+    auto lmsg = dynamic_cast<LockMessage*>(in_msg);
+    return new LockMessage(lmsg->subjectId(), dest_id,
+                           lmsg->destMsgId(), messageToInt(msg),
+                           macId(), from);
+  } else {
     return new LockMessage(0, dest_id, 0, messageToInt(msg),
-                           macId(), from, to, -1);
+                           macId(), from);
+  }
 }
 
 MessageTuple* Lock::createTiming(MessageTuple* in_msg, const string& msg,
@@ -244,23 +246,19 @@ MessageTuple* Lock::createTiming(MessageTuple* in_msg, const string& msg,
 }
 
 
-LockMessage* LockMessage::clone() const
-{
-    return new LockMessage(*this) ;
+
+string LockMessage::toString() {
+  stringstream ss ;
+  ss << MessageTuple::toString() << "(m=" << master_ << ")" ;
+  return ss.str() ;
 }
 
-string LockMessage::toString()
-{
-    stringstream ss ;
-    ss << MessageTuple::toString() << "(k=" << _k << ")" ;
-    return ss.str() ;
+LockMessage* LockMessage::clone() const {
+  return new LockMessage(*this);
 }
 
-string LockSnapshot::toString()
-{
-    stringstream ss;
-    ss << _stateId << "(" ;
-    
-    ss << _ss_f << "," << _ss_b << "," << _ss_m << ")" ;
-    return ss.str() ;
+string LockSnapshot::toString() {
+  stringstream ss;
+  ss << ss_state_ << "(" << ss_master_ << ")";
+  return ss.str();
 }
