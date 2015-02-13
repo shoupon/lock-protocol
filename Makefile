@@ -1,5 +1,5 @@
 CC = gcc
-CXX = g++ -std=c++11
+CXX = clang++ -std=c++11
 # Additional include directory
 INCLUDES = 
 
@@ -16,7 +16,7 @@ LDFLAGS = -g
 # -lm for the math library
 LDLIBS = -L../prob_verify -lpverify
 
-SOURCES=main.cpp channel.cpp competitor.cpp controller.cpp lock.cpp lock_service.cpp lock_utils.cpp
+SOURCES=main.cpp channel.cpp lock.cpp clock.cpp
 
 OBJECTS=$(SOURCES:.cpp=.o)
 

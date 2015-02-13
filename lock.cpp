@@ -11,7 +11,8 @@ using namespace std;
 
 #include "lock.h"
 
-const int Lock::clock_id_ = StateMachine::machineToInt(CLOCK_NAME);
+int Lock::num_locks_;
+int Lock::clock_id_;
 
 Lock::Lock(int k)
     : lock_id_(k), active_(false), front_(-1), back_(-1) {
@@ -26,6 +27,7 @@ Lock::Lock(int k, int front, int back)
 }
 
 void Lock::initialize() {
+  clock_id_ = StateMachine::machineToInt(CLOCK_NAME);
   stringstream ss_lock_name;
   ss_lock_name << LOCK_NAME << "(" << lock_id_ << ")";
   name_ = ss_lock_name.str();

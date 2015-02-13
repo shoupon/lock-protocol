@@ -19,8 +19,6 @@ using namespace std;
 #include "lock.h"
 #include "channel.h"
 #include "lock_utils.h"
-#include "controller.h"
-#include "lock_service.h"
 
 ProbVerifier pvObj ;
 GlobalState* startPoint;
@@ -46,37 +44,30 @@ int main( int argc, char* argv[] )
         pvObj.addMachine(sync);
         
         // Create StateMachine objects
-        Controller *ctrl = new Controller(message_lookup.get(),
-                                          machine_lookup.get(), nLocks);
-        sync->addMachine(ctrl);
-        
-        vector<bool> active(nLocks, false) ;
-        vector<vector<pair<int,int> > > nbrs(nLocks);
-        nbrs[2].push_back(make_pair(0,1)) ;
-        nbrs[4].push_back(make_pair(1,3)) ;
-        nbrs[1].push_back(make_pair(2,4)) ;
-        nbrs[5].push_back(make_pair(0,1)) ;
-        ctrl->setActives(2);
-        ctrl->setActives(4);
-        //ctrl->setActives(1);
-        //ctrl->setActives(5);
-        ctrl->setNbrs(nbrs);
-        
-        vector<Lock*> arrLock ;
-        for( size_t i = 0 ; i < nLocks ; ++i ) {
-            arrLock.push_back(new Lock(i, nLocks, message_lookup.get(),
-                                       machine_lookup.get()));
-            sync->addMachine(arrLock[i]);
+        Lock::setNumLocks(nLocks);
+        vector<Lock> locks;
+        locks.push_back(Lock(0));
+        locks.push_back(Lock(1, 2, 4));
+        locks.push_back(Lock(2, 0, 1));
+        locks.push_back(Lock(3));
+        locks.push_back(Lock(4, 1, 3));
+        locks.push_back(Lock(5, 0, 1));
+        for (auto& l : locks) {
+          sync->addMachine(&l);
+          pvObj.addMachine(&l);
         }
-        Channel *chan = new Channel(nLocks, message_lookup.get(),
-                                    machine_lookup.get());
-        sync->addMachine(chan);
 
-        // Add the state machines into ProbVerifier
-        pvObj.addMachine(ctrl);
-        for( size_t i = 0 ; i < arrLock.size() ; ++i )
-            pvObj.addMachine(arrLock[i]);
-        pvObj.addMachine(chan);
+        vector<Channel> channels;
+        for (int i = 0; i < nLocks; ++i) {
+          for (int j = 0; j < nLocks; ++j) {
+            if (i != j)
+              channels.push_back(Channel(i, j));
+          }
+        }
+        for (auto& c : channels) {
+          sync->addMachine(&c);
+          pvObj.addMachine(&c);
+        }
         
         //LockService *srvc = new LockService(2,0,1);
         Service *srvc = new Service();
@@ -88,6 +79,7 @@ int main( int argc, char* argv[] )
         
         // Specify the global states in the set RS (stopping states)
         // initial state
+        /*
         StoppingState stopZero(startPoint);
         stopZero.addAllow(new LockSnapshot(-1,-1,-1,-1,0), 2); // lock 0
         stopZero.addAllow(new LockSnapshot(-1,-1,-1,-1,0), 3); // lock 1
@@ -187,7 +179,7 @@ int main( int argc, char* argv[] )
         pvObj.addError(&lock25) ;
         
         StoppingState lock26(startPoint) ;
-        lock26.addAllow(new LockSnapshot(10,2,4,-1,4), 3); // lock 1 in state 4
+        lock26.addAllow(new LocnLockskSnapshot(10,2,4,-1,4), 3); // lock 1 in state 4
         lock26.addAllow(new LockSnapshot(10,0,1,-1,4), 7); // lock 5 in state 4
         pvObj.addError(&lock26) ;
         
@@ -200,20 +192,16 @@ int main( int argc, char* argv[] )
         lock56.addAllow(new LockSnapshot(10,1,3,-1,4), 6); // lock 4 in state 4
         lock56.addAllow(new LockSnapshot(10,0,1,-1,4), 7); // lock 5 in state 4
         pvObj.addError(&lock56) ;
-        
+        */
         
         pvObj.addPrintStop(printStop) ;
         //pvObj.addPrintStop();
         
         // Start the procedure of probabilistic verification.
         // Specify the maximum probability depth to be explored
-        pvObj.start(9, startPoint);
+        pvObj.start(3, startPoint, 8);
         
         // When complete, deallocate all machines
-        delete ctrl ;
-        for( size_t i = 0 ; i < arrLock.size() ; ++i )
-            delete arrLock[i];
-        delete chan ;
         delete sync;
         
         srvc->printTraversed();

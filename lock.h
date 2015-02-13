@@ -11,7 +11,6 @@
 
 #include "../prob_verify/statemachine.h"
 #include "../prob_verify/sync.h"
-#include "lock_utils.h"
 #include "clock.h"
 #include "identifiers.h"
 
@@ -19,7 +18,7 @@ class LockMessage;
 
 class Lock : public StateMachine {
   static int num_locks_;
-  const static int clock_id_;
+  static int clock_id_;
 public:
   // Constructor.
   // k: Identifier of the lock
