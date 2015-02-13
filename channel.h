@@ -1,6 +1,6 @@
 //
 //  channel.h
-//  Prob_verify
+//  lock-protocol
 //
 //  Created by Shou-pon Lin on 8/29/12.
 //  Copyright (c) 2012 Shou-pon Lin. All rights reserved.
@@ -9,66 +9,59 @@
 #ifndef CHANNEL_H
 #define CHANNEL_H
 
-#define MAX_OUT_ORDER 2
-
+#include <memory>
+#include <string>
+#include <sstream>
 #include <vector>
 using namespace std;
 
 #include "../prob_verify/statemachine.h"
 #include "../prob_verify/sync.h"
+#include "identifiers.h"
 #include "lock.h"
 #include "competitor.h"
 
-
 class ChannelSnapshot;
-
 
 class Channel: public StateMachine
 {
 public:
-    Channel( int num, Lookup* msg, Lookup* mac ) ;
-    ~Channel() { clearMem(_mem); }
-    
-    int transit(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs,
-                        bool& high_prob, int startIdx);
-    int nullInputTrans(vector<MessageTuple*>& outMsgs,
-                               bool& high_prob, int startIdx ) ;
-    void restore(const StateSnapshot* snapshot);
-    StateSnapshot* curState() ;
-    // Reset the machine to initial state
-    void reset() ;
-    
-    static void copyMem(const vector<MessageTuple*>& fifo, vector<MessageTuple*>& dest) ;
-    static void clearMem(vector<MessageTuple*>& fifo);
-    
+  Channel(int from, int to);
+  ~Channel() {}
+  
+  int transit(MessageTuple* in_msg, vector<MessageTuple*>& out_msgs,
+              bool& high_prob, int startIdx);
+  int nullInputTrans(vector<MessageTuple*>& out_msgs,
+                     bool& high_prob, int startIdx);
+  void restore(const StateSnapshot* snapshot);
+  StateSnapshot* curState();
+  // Reset the machine to initial state
+  void reset();
 protected:
-    const int _range;
-    string _name;
-    
-    vector<MessageTuple*> _mem;
-    
-    MessageTuple* createDelivery(int idx) ;
+  MessageTuple* createDelivery();
+  const int origin_;
+  const int destination_;
+  shared_ptr<LockMessage> msg_in_transit_;
+  string channel_name_;
+  int destination_id_;
 };
 
 // Used for restore the state of a state machine back to a certain point. Should contain
 // the state in which the machine was, the internal variables at that point
-class ChannelSnapshot: public StateSnapshot
-{
-    friend class Channel;
+class ChannelSnapshot: public StateSnapshot {
+  friend class Channel;
 public:
-    ChannelSnapshot() {}
-    ChannelSnapshot( const ChannelSnapshot& item );
-    ChannelSnapshot( const vector<MessageTuple*>& fifo);
-    ~ChannelSnapshot() { Channel::clearMem(_ss_mem) ;}
-    int curStateId() const ; 
-    // Returns the name of current state as specified in the input file
-    string toString() ;
-    // Cast the Snapshot into a integer. Used in HashTable
-    int toInt() ;
-    ChannelSnapshot* clone() const { return new ChannelSnapshot(*this) ; }
-    
+  ChannelSnapshot() {}
+  ChannelSnapshot(const ChannelSnapshot* ss);
+  ChannelSnapshot(const LockMessage* msg): ss_msg_(new LockMessage(*msg)) {}
+  int curStateId() const { return !ss_msg_? 0: 1; }
+  // Returns the name of current state as specified in the input file
+  string toString() ;
+  int toInt() { return curStateId(); }
+  ChannelSnapshot* clone() const { return new ChannelSnapshot(*this) ; }
+  
 private:
-    vector<MessageTuple*> _ss_mem;
+  shared_ptr<LockMessage> ss_msg_;
 };
 
 #endif
