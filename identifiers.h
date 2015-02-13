@@ -1,0 +1,12 @@
+#define GRANTED "granted"
+#define DENIED "denied"
+#define FAILED "failed"
+#define REQUEST "request"
+#define RELEASE "release"
+#define SIGNUP "signup"
+#define SIGNOFF "SIGNOFF"
+#define ALARM "ALARM"
+
+#define CHANNEL_NAME "channel"
+#define CLOCK_NAME "clock"
+#define LOCK_NAME "lock"
