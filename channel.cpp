@@ -21,21 +21,33 @@ Channel::Channel(int from, int to)
    
 int Channel::transit(MessageTuple* in_msg, vector<MessageTuple*>& out_msgs,
                      bool &high_prob, int start_idx) {
-  auto lmsg = dynamic_cast<LockMessage*>(in_msg);
   if (msg_in_transit_)
     return -1;
-  if (!start_idx) {
-    high_prob = true;
-    msg_in_transit_.reset(new LockMessage(*lmsg));
-    out_msgs.push_back(new ClockMessage(in_msg->srcID(),
-                                        machineToInt(CLOCK_NAME),
-                                        in_msg->srcMsgId(),
-                                        messageToInt(SIGNUP),
-                                        macId(), lmsg->getCreator(), macId()));
-    return 1;
-  } else if (start_idx == 1) {
+  if (typeid(*in_msg) == typeid(LockMessage)) {
+    if (!start_idx) {
+      high_prob = true;
+      auto lmsg = dynamic_cast<LockMessage*>(in_msg);
+      msg_in_transit_.reset(new LockMessage(*lmsg));
+      out_msgs.push_back(new ClockMessage(in_msg->srcID(),
+                                          machineToInt(CLOCK_NAME),
+                                          in_msg->srcMsgId(),
+                                          messageToInt(SIGNUP),
+                                          macId(), lmsg->getCreator(), macId()));
+      return 1;
+    } else if (start_idx == 1) {
+      high_prob = false;
+      return 2;
+    } else {
+      return -1;
+    }
+  } else if (typeid(*in_msg) == typeid(ClockMessage)) {
     high_prob = false;
-    return 2;
+    if (!start_idx) {
+      reset();
+      return 1;
+    } else {
+      return -1;
+    }
   } else {
     return -1;
   }
@@ -43,7 +55,7 @@ int Channel::transit(MessageTuple* in_msg, vector<MessageTuple*>& out_msgs,
 
 int Channel::nullInputTrans(vector<MessageTuple*>& out_msgs,
                             bool &high_prob, int start_idx) {
-  if (!start_idx)
+  if (start_idx)
     return -1;
   if (!msg_in_transit_)
     return -1;

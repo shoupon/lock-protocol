@@ -37,6 +37,7 @@ public:
   StateSnapshot* curState();
   // Reset the machine to initial state
   void reset();
+  string getName() const { return channel_name_; }
 protected:
   MessageTuple* createDelivery();
   const int origin_;
