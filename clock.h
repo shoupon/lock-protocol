@@ -19,7 +19,7 @@ class ClockMessage;
 
 class Clock: public StateMachine {
 public:
-  Clock() {}
+  Clock();
   ~Clock() {}
   int transit(MessageTuple* in_msg, vector<MessageTuple*>& out_msgs,
               bool& high_prob, int start_idx);
@@ -28,6 +28,7 @@ public:
   void restore(const StateSnapshot* snapshot);
   StateSnapshot* curState();
   void reset();
+  string getName() const { return "clock"; }
 private:
   vector<int> creators_;
   vector<set<int> > followers_;

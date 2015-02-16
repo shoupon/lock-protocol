@@ -8,11 +8,16 @@
 
 #include "clock.h"
 
+Clock::Clock() {
+  setId(machineToInt(getName()));
+}
+
 int Clock::transit(MessageTuple* in_msg, vector<MessageTuple*>& out_msgs,
                    bool& high_prob, int start_idx) {
   auto cmsg = dynamic_cast<ClockMessage*>(in_msg);
   if (start_idx)
     return -1;
+  high_prob = true;
   int creator = cmsg->getMaster();
   int follower_mac_id = cmsg->getFollwer();
   string msg = IntToMessage(cmsg->destMsgId());
@@ -49,7 +54,7 @@ int Clock::transit(MessageTuple* in_msg, vector<MessageTuple*>& out_msgs,
 
 int Clock::nullInputTrans(vector<MessageTuple*>& out_msgs,
                           bool& high_prob, int start_idx) {
-  if (start_idx)
+  if (start_idx || followers_.empty())
     return -1;
   high_prob = true;
   int msg_id = messageToInt(ALARM);
