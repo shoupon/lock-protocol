@@ -36,14 +36,20 @@ private:
 
 class ClockSnapshot: public StateSnapshot {
   friend class Clock;
+
+  static const int kReadable;
+  static const int kString;
 public:
   ClockSnapshot(const vector<int>& creators,
                 const vector<set<int> >& followers);
   int curStateId() const { return ss_creators_.size(); }
   string toString();
+  string toReadable();
   int toInt() { return curStateId(); }
   ClockSnapshot* clone() const { return new ClockSnapshot(*this); }
 private:
+  string stringify(int type) const;
+
   vector<int> ss_creators_;
   vector<set<int> > ss_followers_;
 };

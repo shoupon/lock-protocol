@@ -8,6 +8,7 @@
 
 #include "clock.h"
 
+
 Clock::Clock() {
   setId(machineToInt(getName()));
 }
@@ -81,6 +82,9 @@ void Clock::reset() {
   followers_.clear();
 }
 
+const int ClockSnapshot::kReadable = 1;
+const int ClockSnapshot::kString = 2;
+
 ClockSnapshot::ClockSnapshot(const vector<int>& creators,
                              const vector<set<int> >& followers)
     : ss_creators_(creators), ss_followers_(followers) {
@@ -88,6 +92,14 @@ ClockSnapshot::ClockSnapshot(const vector<int>& creators,
 }
 
 string ClockSnapshot::toString() {
+  return stringify(kString);
+}
+
+string ClockSnapshot::toReadable() {
+  return stringify(kReadable);
+}
+
+string ClockSnapshot::stringify(int type) const {
   stringstream ss;
   ss << "[";
   int k = 0;
@@ -99,7 +111,12 @@ string ClockSnapshot::toString() {
     for (auto mid : ss_followers_[i]) {
       if (l++)
         ss << ",";
-      ss << mid;
+      if (type == kReadable)
+        ss << StateMachine::IntToMachine(mid);
+      else if (type == kString)
+        ss << mid;
+      else
+        assert(false);
     }
     ss << ")";
   }
