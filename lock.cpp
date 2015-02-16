@@ -92,6 +92,8 @@ int Lock::transit(MessageTuple* in_msg, vector<MessageTuple*>& outMsgs,
             assert(false);
           }
           return 3;
+        } else {
+          return 3;
         }
         break;
       case 3:
@@ -106,6 +108,8 @@ int Lock::transit(MessageTuple* in_msg, vector<MessageTuple*>& outMsgs,
           else
             assert(false);
           return 3;
+        } else {
+          return 3;
         }
         break;
       case 13:
@@ -119,6 +123,8 @@ int Lock::transit(MessageTuple* in_msg, vector<MessageTuple*>& outMsgs,
             _state = 4;
           else
             assert(false);
+          return 3;
+        } else {
           return 3;
         }
         break;
