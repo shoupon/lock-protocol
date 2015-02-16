@@ -42,7 +42,7 @@ protected:
   MessageTuple* createDelivery();
   const int origin_;
   const int destination_;
-  shared_ptr<LockMessage> msg_in_transit_;
+  vector<shared_ptr<LockMessage> > msgs_in_transit_;
   string channel_name_;
   int destination_id_;
 };
@@ -53,17 +53,17 @@ class ChannelSnapshot: public StateSnapshot {
   friend class Channel;
 public:
   ChannelSnapshot() {}
-  ChannelSnapshot(const ChannelSnapshot* ss);
-  ChannelSnapshot(const LockMessage* msg): ss_msg_(new LockMessage(*msg)) {}
-  int curStateId() const { return !ss_msg_? 0: 1; }
+  ChannelSnapshot(const vector<shared_ptr<LockMessage> >& msgs);
+  int curStateId() const { return ss_msgs_.size(); }
   // Returns the name of current state as specified in the input file
-  string toString() ;
+  string toString();
+  string toReadable();
   int toInt() { return curStateId(); }
   ChannelSnapshot* clone() const { return new ChannelSnapshot(*this) ; }
   bool match(StateSnapshot* other);
   
 private:
-  shared_ptr<LockMessage> ss_msg_;
+  vector<shared_ptr<LockMessage> > ss_msgs_;
 };
 
 #endif

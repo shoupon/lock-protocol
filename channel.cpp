@@ -21,18 +21,20 @@ Channel::Channel(int from, int to)
    
 int Channel::transit(MessageTuple* in_msg, vector<MessageTuple*>& out_msgs,
                      bool &high_prob, int start_idx) {
-  if (msg_in_transit_)
+  if (msgs_in_transit_.size() >= 2)
     return -1;
   if (typeid(*in_msg) == typeid(LockMessage)) {
     if (!start_idx) {
       high_prob = true;
       auto lmsg = dynamic_cast<LockMessage*>(in_msg);
-      msg_in_transit_.reset(new LockMessage(*lmsg));
+      msgs_in_transit_.push_back(shared_ptr<LockMessage>(
+          new LockMessage(*lmsg)));
       out_msgs.push_back(new ClockMessage(in_msg->srcID(),
                                           machineToInt(CLOCK_NAME),
                                           in_msg->srcMsgId(),
                                           messageToInt(SIGNUP),
-                                          macId(), lmsg->getCreator(), macId()));
+                                          macId(),
+                                          lmsg->getSession(), macId()));
       return 1;
     } else if (start_idx == 1) {
       high_prob = false;
@@ -41,9 +43,22 @@ int Channel::transit(MessageTuple* in_msg, vector<MessageTuple*>& out_msgs,
       return -1;
     }
   } else if (typeid(*in_msg) == typeid(ClockMessage)) {
+    auto cmsg = dynamic_cast<ClockMessage*>(in_msg);
     high_prob = false;
     if (!start_idx) {
-      reset();
+      bool found = false;
+      do {
+        auto it = msgs_in_transit_.begin();
+        found = false;
+        while (it != msgs_in_transit_.end()) {
+          if ((*it)->getSession() == cmsg->getMaster()) {
+            msgs_in_transit_.erase(it);
+            found = true;
+            break;
+          }
+          ++it;
+        }
+      } while (found);
       return 1;
     } else {
       return -1;
@@ -55,55 +70,66 @@ int Channel::transit(MessageTuple* in_msg, vector<MessageTuple*>& out_msgs,
 
 int Channel::nullInputTrans(vector<MessageTuple*>& out_msgs,
                             bool &high_prob, int start_idx) {
-  if (start_idx)
-    return -1;
-  if (!msg_in_transit_)
+  if (start_idx || msgs_in_transit_.empty())
     return -1;
   else {
-    auto lmsg = dynamic_cast<LockMessage*>(msg_in_transit_.get());
+    auto lmsg = dynamic_cast<LockMessage*>(msgs_in_transit_[0].get());
     out_msgs.push_back(createDelivery());
-    out_msgs.push_back(new ClockMessage(0, machineToInt(CLOCK_NAME),
-                                        0, messageToInt(SIGNOFF),
-                                        macId(), lmsg->getCreator(), macId()));
-    reset();
+    int session = lmsg->getSession();
+    msgs_in_transit_.erase(msgs_in_transit_.begin());
+    if (msgs_in_transit_.empty() ||
+        msgs_in_transit_[0]->getSession() != session) {
+      out_msgs.push_back(new ClockMessage(0, machineToInt(CLOCK_NAME),
+                                          0, messageToInt(SIGNOFF), macId(),
+                                          session, macId()));
+    }
     return 1;
   }
 }
 
 void Channel::restore(const StateSnapshot* snapshot) {
   auto css = dynamic_cast<const ChannelSnapshot*>(snapshot);
-  if (css->ss_msg_)
-    msg_in_transit_.reset(css->ss_msg_->clone());
-  else
-    msg_in_transit_.reset();
+  msgs_in_transit_ = css->ss_msgs_;
 }
 
 StateSnapshot* Channel::curState() {
-  if (msg_in_transit_)
-    return new ChannelSnapshot(msg_in_transit_.get());
+  if (msgs_in_transit_.size())
+    return new ChannelSnapshot(msgs_in_transit_);
   else
     return new ChannelSnapshot();
 }
 
 void Channel::reset() {
-  msg_in_transit_.reset();
+  msgs_in_transit_.clear();
 } 
 
 MessageTuple* Channel::createDelivery() {
-  assert(msg_in_transit_);
+  assert(msgs_in_transit_.size());
+  auto msg = msgs_in_transit_[0];
   return new LockMessage(0, destination_id_,
-                         0, msg_in_transit_->destMsgId(), macId(),
-                         *(msg_in_transit_.get()));
+                         0, msg->destMsgId(), macId(), *msg);
 }
 
-ChannelSnapshot::ChannelSnapshot(const ChannelSnapshot* ss) {
-  if (ss->ss_msg_)
-    ss_msg_.reset(new LockMessage(*(ss->ss_msg_)));
+ChannelSnapshot::ChannelSnapshot(const vector<shared_ptr<LockMessage>>& msgs) {
+  ss_msgs_ = msgs;
 }
 
 string ChannelSnapshot::toString() {
-  if (ss_msg_)
-    return string("[") + ss_msg_->toReadable() + "]";
+  if (ss_msgs_.size() == 2)
+    return string("[") + ss_msgs_[0]->toString() + ","
+        + ss_msgs_[1]->toReadable() + "]";
+  else if (ss_msgs_.size() == 1)
+    return string("[") + ss_msgs_[0]->toString() + "]";
+  else
+    return "[]";
+}
+
+string ChannelSnapshot::toReadable() {
+  if (ss_msgs_.size() == 2)
+    return string("[") + ss_msgs_[0]->toReadable() + ","
+        + ss_msgs_[1]->toReadable() + "]";
+  else if (ss_msgs_.size() == 1)
+    return string("[") + ss_msgs_[0]->toReadable() + "]";
   else
     return "[]";
 }
@@ -111,8 +137,15 @@ string ChannelSnapshot::toString() {
 bool ChannelSnapshot::match(StateSnapshot* other) {
   assert(typeid(*other) == typeid(ChannelSnapshot));
   auto css = dynamic_cast<ChannelSnapshot*>(other);
-  if (!ss_msg_)
-    return !css->ss_msg_;
-  else
-    return *ss_msg_ == *css->ss_msg_;
+  if (ss_msgs_.empty()) {
+    return css->ss_msgs_.empty();
+  } else if (ss_msgs_.size() != css->ss_msgs_.size()) {
+    return false;
+  } else {
+    for (int i = 0; i < ss_msgs_.size(); ++i) {
+      if (!(*ss_msgs_[i] == *css->ss_msgs_[i]))
+        return false;
+    }
+  }
+  return true;
 }
