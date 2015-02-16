@@ -269,3 +269,9 @@ string LockSnapshot::toString() {
   ss << ss_state_ << "(" << ss_master_ << ")";
   return ss.str();
 }
+
+bool LockSnapshot::match(StateSnapshot *other) {
+  assert(typeid(*other) == typeid(LockSnapshot));
+  auto lss = dynamic_cast<LockSnapshot*>(other);
+  return ss_state_ == lss->ss_state_ && ss_master_ == lss->ss_master_;
+}

@@ -60,6 +60,7 @@ public:
   string toString() ;
   int toInt() { return curStateId(); }
   ChannelSnapshot* clone() const { return new ChannelSnapshot(*this) ; }
+  bool match(StateSnapshot* other);
   
 private:
   shared_ptr<LockMessage> ss_msg_;

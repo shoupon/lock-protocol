@@ -96,6 +96,7 @@ public:
   int toInt() { return ((ss_master_ << 16) + ss_state_); }
   LockSnapshot* clone() const { return new LockSnapshot(ss_state_,
                                                         ss_master_); }
+  bool match(StateSnapshot* other);
     
 private:
   int ss_state_;

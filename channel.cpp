@@ -107,3 +107,12 @@ string ChannelSnapshot::toString() {
   else
     return "[]";
 }
+
+bool ChannelSnapshot::match(StateSnapshot* other) {
+  assert(typeid(*other) == typeid(ChannelSnapshot));
+  auto css = dynamic_cast<ChannelSnapshot*>(other);
+  if (!ss_msg_)
+    return !css->ss_msg_;
+  else
+    return *ss_msg_ == *css->ss_msg_;
+}
