@@ -40,9 +40,9 @@ private:
   void initialize();
 
   MessageTuple* createResponse(MessageTuple* in_msg, const string& msg,
-                               int from, int to);
+                               int from, int to, int session);
   MessageTuple* createTiming(MessageTuple* in_msg, const string& msg,
-                             int creator_id, int my_id);
+                             int session, int my_id);
 
   const int lock_id_;
   const bool active_;
@@ -59,26 +59,29 @@ class LockMessage : public MessageTuple
 {
 public:
   LockMessage(int src, int dest, int srcMsg, int destMsg, int subject,
-              int master)
-      : MessageTuple(src, dest, srcMsg, destMsg, subject), master_(master) {}
+              int master, int session)
+      : MessageTuple(src, dest, srcMsg, destMsg, subject),
+        master_(master), session_(session) {}
   LockMessage(const LockMessage& msg)
       : MessageTuple(msg._src, msg._dest,
                      msg._srcMsg, msg._destMsg, msg._subject),
-        master_(msg.master_) {}
+        master_(msg.master_), session_(msg.session_) {}
   LockMessage(int src, int dest, int srcMsg, int destMsg, int subject,
               const LockMessage& msg)
       : MessageTuple(src, dest, srcMsg, destMsg, subject),
-        master_(msg.master_) {}
+        master_(msg.master_), session_(msg.session_) {}
   ~LockMessage() {}
-  size_t numParams() { return 1; }
-  int getParam(size_t arg) { return master_; }
+  size_t numParams() { return 2; }
+  int getParam(size_t arg) { return arg? session_: master_; }
   
   string toString();
   LockMessage* clone() const ;
 
   int getCreator() const { return master_; }
+  int getSession() const { return session_; }
 private:    
   const int master_;
+  const int session_;
 };
 
 class LockSnapshot : public StateSnapshot {

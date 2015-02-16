@@ -52,16 +52,15 @@ int Lock::transit(MessageTuple* in_msg, vector<MessageTuple*>& outMsgs,
 
   if (typeid(*in_msg) == typeid(LockMessage)) {
     LockMessage *lmsg = dynamic_cast<LockMessage *>(in_msg);
-    int from = lmsg->getCreator();
     string msg = IntToMessage(in_msg->destMsgId());
     switch (_state) {
       case 0:
         if (msg == REQUEST) {
           master_ = lmsg->getCreator();
-          outMsgs.push_back(createResponse(in_msg, GRANTED, lock_id_, master_));
+          outMsgs.push_back(createResponse(in_msg, GRANTED, lock_id_, master_,
+                                           master_));
           outMsgs.push_back(createTiming(in_msg, SIGNUP, master_, macId()));
           _state = 1;
-          master_ = from;
           return 3;
         } else {
           // ignore
@@ -71,7 +70,8 @@ int Lock::transit(MessageTuple* in_msg, vector<MessageTuple*>& outMsgs,
       case 1:
         if (msg == REQUEST) {
           outMsgs.push_back(createResponse(in_msg, DENIED, lock_id_,
-                                           lmsg->getCreator()));
+                                           lmsg->getCreator(),
+                                           master_));
           return 3;
         } else {
           return 3;
@@ -80,7 +80,8 @@ int Lock::transit(MessageTuple* in_msg, vector<MessageTuple*>& outMsgs,
       case 2:
         if (msg == REQUEST)  {
           outMsgs.push_back(createResponse(in_msg, DENIED, lock_id_,
-                                           lmsg->getCreator()));
+                                           lmsg->getCreator(),
+                                           master_));
           return 3;
         } else if (msg == GRANTED) {
           int from = lmsg->getCreator();
@@ -99,7 +100,8 @@ int Lock::transit(MessageTuple* in_msg, vector<MessageTuple*>& outMsgs,
       case 3:
         if (msg == REQUEST)  {
           outMsgs.push_back(createResponse(in_msg, DENIED, lock_id_,
-                                           lmsg->getCreator()));
+                                           lmsg->getCreator(),
+                                           master_));
           return 3;
         } else if (msg == GRANTED) {
           int from = lmsg->getCreator();
@@ -115,7 +117,8 @@ int Lock::transit(MessageTuple* in_msg, vector<MessageTuple*>& outMsgs,
       case 13:
         if (msg == REQUEST)  {
           outMsgs.push_back(createResponse(in_msg, DENIED, lock_id_,
-                                           lmsg->getCreator()));
+                                           lmsg->getCreator(),
+                                           master_));
           return 3;
         } else if (msg == GRANTED) {
           int from = lmsg->getCreator();
@@ -131,7 +134,8 @@ int Lock::transit(MessageTuple* in_msg, vector<MessageTuple*>& outMsgs,
       case 4:
         if (msg == REQUEST) {
           outMsgs.push_back(createResponse(in_msg, DENIED, lock_id_,
-                                           lmsg->getCreator()));
+                                           lmsg->getCreator(),
+                                           master_));
           return 3;
         } else {
           return 3;
@@ -145,7 +149,7 @@ int Lock::transit(MessageTuple* in_msg, vector<MessageTuple*>& outMsgs,
     //ClockMessage *cmsg = dynamic_cast<ClockMessage *>(in_msg);
     string msg = IntToMessage(in_msg->destMsgId());
     if (msg == ALARM) {
-      _state = 0;
+      reset();
       return 3;
     }
   }
@@ -158,8 +162,10 @@ int Lock::nullInputTrans(vector<MessageTuple*>& outMsgs,
   switch (_state) {
     case 0:
       if (!startIdx && active_) {
-        outMsgs.push_back(createResponse(nullptr, REQUEST, lock_id_, front_));
-        outMsgs.push_back(createResponse(nullptr, REQUEST, lock_id_, back_));
+        outMsgs.push_back(createResponse(nullptr, REQUEST, lock_id_, front_,
+                                         lock_id_));
+        outMsgs.push_back(createResponse(nullptr, REQUEST, lock_id_, back_,
+                                         lock_id_));
         outMsgs.push_back(createTiming(nullptr, SIGNUP, lock_id_, macId()));
         _state = 2;
         master_ = lock_id_;
@@ -180,7 +186,8 @@ int Lock::nullInputTrans(vector<MessageTuple*>& outMsgs,
       break;
     case 3:  // releasing
       if (!startIdx) {
-        outMsgs.push_back(createResponse(nullptr, RELEASE, lock_id_, front_));
+        outMsgs.push_back(createResponse(nullptr, RELEASE, lock_id_, front_,
+                                         lock_id_));
         outMsgs.push_back(createTiming(nullptr, SIGNOFF, lock_id_, macId()));
         _current = 0;
         return 3;
@@ -190,7 +197,8 @@ int Lock::nullInputTrans(vector<MessageTuple*>& outMsgs,
       break;
     case 13:
       if (!startIdx) {
-        outMsgs.push_back(createResponse(nullptr, RELEASE, lock_id_, back_));
+        outMsgs.push_back(createResponse(nullptr, RELEASE, lock_id_, back_,
+                                         lock_id_));
         outMsgs.push_back(createTiming(nullptr, SIGNOFF, lock_id_, macId()));
         _current = 0;
         return 3;
@@ -200,8 +208,10 @@ int Lock::nullInputTrans(vector<MessageTuple*>& outMsgs,
       break;
     case 4:
       if (!startIdx) {
-        outMsgs.push_back(createResponse(nullptr, RELEASE, lock_id_, front_));
-        outMsgs.push_back(createResponse(nullptr, RELEASE, lock_id_, back_));
+        outMsgs.push_back(createResponse(nullptr, RELEASE, lock_id_, front_,
+                                         lock_id_));
+        outMsgs.push_back(createResponse(nullptr, RELEASE, lock_id_, back_,
+                                         lock_id_));
         outMsgs.push_back(createTiming(nullptr, SIGNOFF, lock_id_, macId()));
         _current = 0;
         return 3;
@@ -234,35 +244,37 @@ void Lock::reset() {
 }
 
 MessageTuple* Lock::createResponse(MessageTuple* in_msg,
-                                   const string& msg, int from, int to) {
+                                   const string& msg, int from, int to,
+                                   int session) {
   int dest_id = channel_mac_ids_[to];
   if (in_msg) {
     auto lmsg = dynamic_cast<LockMessage*>(in_msg);
     return new LockMessage(lmsg->subjectId(), dest_id,
                            lmsg->destMsgId(), messageToInt(msg),
-                           macId(), from);
+                           macId(), from, session);
   } else {
     return new LockMessage(0, dest_id, 0, messageToInt(msg),
-                           macId(), from);
+                           macId(), from, session);
   }
 }
 
 MessageTuple* Lock::createTiming(MessageTuple* in_msg, const string& msg,
-                                 int creator_id, int my_id) {
+                                 int session, int my_id) {
   if (in_msg)
     return new ClockMessage(in_msg->subjectId(), clock_id_,
                             in_msg->destMsgId(), messageToInt(msg),
-                            macId(), creator_id, my_id);
+                            macId(), session, my_id);
   else
     return new ClockMessage(0, clock_id_, 0, messageToInt(msg),
-                            macId(), creator_id, my_id);
+                            macId(), session, my_id);
 }
 
 
 
 string LockMessage::toString() {
   stringstream ss ;
-  ss << MessageTuple::toString() << "(m=" << master_ << ")" ;
+  ss << MessageTuple::toString() << "(m=" << master_
+                                 << ",s=" << session_ << ")";
   return ss.str() ;
 }
 
