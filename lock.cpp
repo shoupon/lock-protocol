@@ -33,10 +33,12 @@ void Lock::initialize() {
   name_ = ss_lock_name.str();
   setId(machineToInt(name_));
   for (int i = 0; i < num_locks_; ++i) {
+    if (i == lock_id_)
+      continue;
     stringstream ss_channel_name;
     ss_channel_name << CHANNEL_NAME << "(" << lock_id_ << "," << i << ")";
-    channel_names_.push_back(ss_channel_name.str());
-    channel_mac_ids_.push_back(machineToInt(channel_names_.back()));
+    channel_names_[i] = ss_channel_name.str();
+    channel_mac_ids_[i] = machineToInt(channel_names_[i]);
   }
 }
 
@@ -59,6 +61,7 @@ int Lock::transit(MessageTuple* in_msg, vector<MessageTuple*>& outMsgs,
           outMsgs.push_back(createResponse(in_msg, GRANTED, lock_id_, master_));
           outMsgs.push_back(createTiming(in_msg, SIGNUP, master_, macId()));
           _state = 1;
+          master_ = from;
           return 3;
         } else {
           // ignore
@@ -145,6 +148,7 @@ int Lock::transit(MessageTuple* in_msg, vector<MessageTuple*>& outMsgs,
 
 int Lock::nullInputTrans(vector<MessageTuple*>& outMsgs,
                          bool& high_prob, int startIdx) {
+  high_prob = true;
   switch (_state) {
     case 0:
       if (!startIdx && active_) {
@@ -152,6 +156,7 @@ int Lock::nullInputTrans(vector<MessageTuple*>& outMsgs,
         outMsgs.push_back(createResponse(nullptr, REQUEST, lock_id_, back_));
         outMsgs.push_back(createTiming(nullptr, SIGNUP, lock_id_, macId()));
         _state = 2;
+        master_ = lock_id_;
         return 3;
       } else {
         return -1;

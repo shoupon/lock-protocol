@@ -33,6 +33,7 @@ public:
   StateSnapshot* curState() ;
   void reset() ;
 
+  string getName() const { return name_; }
   static void setNumLocks(int n_locks) { num_locks_ = n_locks; }
   
 private:
@@ -50,8 +51,8 @@ private:
   int master_;
 
   string name_;
-  vector<string> channel_names_;
-  vector<int> channel_mac_ids_;
+  unordered_map<int, string> channel_names_;
+  unordered_map<int, int> channel_mac_ids_;
 };
 
 class LockMessage : public MessageTuple
@@ -84,6 +85,7 @@ class LockSnapshot : public StateSnapshot {
 public:
   friend class Lock;
 
+  LockSnapshot(): ss_state_(0), ss_master_(-1) {}
   LockSnapshot(int state, int master)
       : ss_state_(state), ss_master_(master) {}
   ~LockSnapshot() {} ;
