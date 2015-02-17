@@ -9,6 +9,7 @@
 #ifndef LOCK_H
 #define LOCK_H
 
+#include "../prob_verify/pverify.h"
 #include "../prob_verify/statemachine.h"
 #include "../prob_verify/sync.h"
 #include "clock.h"
@@ -35,6 +36,7 @@ public:
 
   string getName() const { return name_; }
   static void setNumLocks(int n_locks) { num_locks_ = n_locks; }
+  int determineSession(LockMessage* in_msg);
   
 private:
   void initialize();

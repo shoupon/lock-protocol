@@ -29,6 +29,8 @@ public:
   StateSnapshot* curState();
   void reset();
   string getName() const { return "clock"; }
+
+  int moreImminent(int a, int b);
 private:
   vector<int> creators_;
   vector<set<int> > followers_;

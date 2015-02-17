@@ -82,6 +82,28 @@ void Clock::reset() {
   followers_.clear();
 }
 
+int Clock::moreImminent(int a, int b) {
+  int ai = -1;
+  int bi = -1;
+  for (auto c : creators_) {
+    ai++;
+    if (c == a)
+      break;
+  }
+  for (auto c : creators_) {
+    bi++;
+    if (c == b)
+      break;
+  }
+  if (ai < bi)
+    return a;
+  else if (ai > bi)
+    return b;
+  else
+    assert(false);
+  return -1;
+}
+
 const int ClockSnapshot::kReadable = 1;
 const int ClockSnapshot::kString = 2;
 

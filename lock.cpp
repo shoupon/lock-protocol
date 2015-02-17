@@ -69,9 +69,9 @@ int Lock::transit(MessageTuple* in_msg, vector<MessageTuple*>& outMsgs,
         break;
       case 1:
         if (msg == REQUEST) {
+          int session = determineSession(lmsg);
           outMsgs.push_back(createResponse(in_msg, DENIED, lock_id_,
-                                           lmsg->getCreator(),
-                                           master_));
+                                           lmsg->getCreator(), session));
           return 3;
         } else {
           return 3;
@@ -79,9 +79,9 @@ int Lock::transit(MessageTuple* in_msg, vector<MessageTuple*>& outMsgs,
         break;
       case 2:
         if (msg == REQUEST)  {
+          int session = determineSession(lmsg);
           outMsgs.push_back(createResponse(in_msg, DENIED, lock_id_,
-                                           lmsg->getCreator(),
-                                           master_));
+                                           lmsg->getCreator(), session));
           return 3;
         } else if (msg == GRANTED) {
           int from = lmsg->getCreator();
@@ -99,9 +99,9 @@ int Lock::transit(MessageTuple* in_msg, vector<MessageTuple*>& outMsgs,
         break;
       case 3:
         if (msg == REQUEST)  {
+          int session = determineSession(lmsg);
           outMsgs.push_back(createResponse(in_msg, DENIED, lock_id_,
-                                           lmsg->getCreator(),
-                                           master_));
+                                           lmsg->getCreator(), session));
           return 3;
         } else if (msg == GRANTED) {
           int from = lmsg->getCreator();
@@ -116,9 +116,9 @@ int Lock::transit(MessageTuple* in_msg, vector<MessageTuple*>& outMsgs,
         break;
       case 13:
         if (msg == REQUEST)  {
+          int session = determineSession(lmsg);
           outMsgs.push_back(createResponse(in_msg, DENIED, lock_id_,
-                                           lmsg->getCreator(),
-                                           master_));
+                                           lmsg->getCreator(), session));
           return 3;
         } else if (msg == GRANTED) {
           int from = lmsg->getCreator();
@@ -133,9 +133,9 @@ int Lock::transit(MessageTuple* in_msg, vector<MessageTuple*>& outMsgs,
         break;
       case 4:
         if (msg == REQUEST) {
+          int session = determineSession(lmsg);
           outMsgs.push_back(createResponse(in_msg, DENIED, lock_id_,
-                                           lmsg->getCreator(),
-                                           master_));
+                                           lmsg->getCreator(), session));
           return 3;
         } else {
           return 3;
@@ -241,6 +241,11 @@ StateSnapshot* Lock::curState() {
 void Lock::reset() {
   _state = 0;
   master_ = -1;
+}
+
+int Lock::determineSession(LockMessage* in_msg) {
+  auto clock_ptr = dynamic_cast<Clock*>(ProbVerifier::getMachine(CLOCK_NAME));
+  return clock_ptr->moreImminent(in_msg->getCreator(), master_);
 }
 
 MessageTuple* Lock::createResponse(MessageTuple* in_msg,
