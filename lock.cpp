@@ -276,7 +276,7 @@ MessageTuple* Lock::createTiming(MessageTuple* in_msg, const string& msg,
 
 
 
-string LockMessage::toString() {
+string LockMessage::toString() const {
   stringstream ss ;
   ss << MessageTuple::toString() << "(m=" << master_
                                  << ",s=" << session_ << ")";
@@ -287,7 +287,7 @@ LockMessage* LockMessage::clone() const {
   return new LockMessage(*this);
 }
 
-string LockSnapshot::toString() {
+string LockSnapshot::toString() const {
   stringstream ss;
   ss << ss_state_ << "(" << ss_master_ << ")";
   return ss.str();

@@ -114,7 +114,7 @@ ChannelSnapshot::ChannelSnapshot(const vector<shared_ptr<LockMessage>>& msgs) {
   ss_msgs_ = msgs;
 }
 
-string ChannelSnapshot::toString() {
+string ChannelSnapshot::toString() const {
   if (ss_msgs_.size() == 2)
     return string("[") + ss_msgs_[0]->toString() + ","
         + ss_msgs_[1]->toReadable() + "]";
@@ -124,7 +124,7 @@ string ChannelSnapshot::toString() {
     return "[]";
 }
 
-string ChannelSnapshot::toReadable() {
+string ChannelSnapshot::toReadable() const {
   if (ss_msgs_.size() == 2)
     return string("[") + ss_msgs_[0]->toReadable() + ","
         + ss_msgs_[1]->toReadable() + "]";

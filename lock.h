@@ -76,8 +76,8 @@ public:
   size_t numParams() { return 2; }
   int getParam(size_t arg) { return arg? session_: master_; }
   
-  string toString();
-  LockMessage* clone() const ;
+  string toString() const;
+  LockMessage* clone() const;
 
   int getCreator() const { return master_; }
   int getSession() const { return session_; }
@@ -96,7 +96,7 @@ public:
   ~LockSnapshot() {} ;
   int curStateId() const { return ss_state_; }
   // Returns the name of current state as specified in the input file
-  string toString() ;
+  string toString() const;
   // Cast the Snapshot into a integer. Used in HashTable
   int toInt() { return ((ss_master_ << 16) + ss_state_); }
   LockSnapshot* clone() const { return new LockSnapshot(ss_state_,

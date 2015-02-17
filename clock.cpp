@@ -113,11 +113,11 @@ ClockSnapshot::ClockSnapshot(const vector<int>& creators,
   ;
 }
 
-string ClockSnapshot::toString() {
+string ClockSnapshot::toString() const {
   return stringify(kString);
 }
 
-string ClockSnapshot::toReadable() {
+string ClockSnapshot::toReadable() const {
   return stringify(kReadable);
 }
 
@@ -153,7 +153,7 @@ ClockMessage::ClockMessage(int src, int dest, int src_msg, int dest_msg,
   ;
 }
 
-string ClockMessage::toString() {
+string ClockMessage::toString() const {
   stringstream ss;
   ss << MessageTuple::toString()
      << "(" << master_id_ << "," << follower_id_ << ")";

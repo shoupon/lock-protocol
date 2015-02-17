@@ -56,8 +56,8 @@ public:
   ChannelSnapshot(const vector<shared_ptr<LockMessage> >& msgs);
   int curStateId() const { return ss_msgs_.size(); }
   // Returns the name of current state as specified in the input file
-  string toString();
-  string toReadable();
+  string toString() const;
+  string toReadable() const;
   int toInt() { return curStateId(); }
   ChannelSnapshot* clone() const { return new ChannelSnapshot(*this) ; }
   bool match(StateSnapshot* other);

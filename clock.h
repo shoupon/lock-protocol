@@ -45,8 +45,8 @@ public:
   ClockSnapshot(const vector<int>& creators,
                 const vector<set<int> >& followers);
   int curStateId() const { return ss_creators_.size(); }
-  string toString();
-  string toReadable();
+  string toString() const;
+  string toReadable() const;
   int toInt() { return curStateId(); }
   ClockSnapshot* clone() const { return new ClockSnapshot(*this); }
 private:
@@ -60,7 +60,7 @@ class ClockMessage: public MessageTuple {
 public:
   ClockMessage(int src, int dest, int src_msg, int dest_msg, int subject,
                int master_id, int follower_id);
-  string toString();
+  string toString() const;
   ClockMessage* clone() const { return new ClockMessage(*this); }
   size_t numParams() { return 2; }
   int getParams(size_t arg) { return (!arg)? master_id_: follower_id_; }
