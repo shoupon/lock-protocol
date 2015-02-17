@@ -23,9 +23,24 @@ using namespace std;
 ProbVerifier pvObj ;
 GlobalState* startPoint;
 
+vector<Lock> locks;
+vector<vector<shared_ptr<Channel>>> channels;
+
 bool printStop(GlobalState* left, GlobalState* right)
 {
     return true;
+}
+
+void setupLockedState(StoppingState& stop, int m, int f, int b) {
+  stop.addAllow(new LockSnapshot(4, m), locks[m].getName());
+  stop.addAllow(new LockSnapshot(1, m), locks[f].getName());
+  stop.addAllow(new LockSnapshot(1, m), locks[b].getName());
+  for (auto &c : channels[m])
+    stop.addAllow(new ChannelSnapshot(), c->getName());
+  for (auto &c : channels[f])
+    stop.addAllow(new ChannelSnapshot(), c->getName());
+  for (auto &c : channels[b])
+    stop.addAllow(new ChannelSnapshot(), c->getName());
 }
 
 int nLocks = 6;
@@ -45,7 +60,7 @@ int main( int argc, char* argv[] )
 
     // Create StateMachine objects
     Lock::setNumLocks(nLocks);
-    vector<Lock> locks;
+    locks.clear();
     locks.push_back(Lock(0));
     locks.push_back(Lock(1));
     //locks.push_back(Lock(1, 2, 4));
@@ -60,7 +75,7 @@ int main( int argc, char* argv[] )
       pvObj.addMachine(&l);
     }
 
-    vector<vector<shared_ptr<Channel>>> channels;
+    channels.clear();
     for (int i = 0; i < nLocks; ++i) {
       channels.resize(i + 1);
       for (int j = 0; j < nLocks; ++j) {
@@ -91,15 +106,7 @@ int main( int argc, char* argv[] )
     pvObj.addSTOP(&stop_zero);
 
     StoppingState stop_group1_locked(&start_point);
-    stop_group1_locked.addAllow(new LockSnapshot(4, 2), locks[2].getName());
-    stop_group1_locked.addAllow(new LockSnapshot(1, 2), locks[0].getName());
-    stop_group1_locked.addAllow(new LockSnapshot(1, 2), locks[1].getName());
-    for (auto &c : channels[2])
-      stop_group1_locked.addAllow(new ChannelSnapshot(), c->getName());
-    for (auto &c : channels[0])
-      stop_group1_locked.addAllow(new ChannelSnapshot(), c->getName());
-    for (auto &c : channels[1])
-      stop_group1_locked.addAllow(new ChannelSnapshot(), c->getName());
+    setupLockedState(stop_group1_locked, 2, 0, 1);
     pvObj.addSTOP(&stop_group1_locked);
     /*
     // state LF
