@@ -21,7 +21,7 @@ Channel::Channel(int from, int to)
    
 int Channel::transit(MessageTuple* in_msg, vector<MessageTuple*>& out_msgs,
                      bool &high_prob, int start_idx) {
-  if (msgs_in_transit_.size() >= 2)
+  if (msgs_in_transit_.size() > 2)
     return -1;
   if (typeid(*in_msg) == typeid(LockMessage)) {
     if (!start_idx) {
