@@ -93,6 +93,9 @@ int Lock::transit(MessageTuple* in_msg, vector<MessageTuple*>& outMsgs,
             assert(false);
           }
           return 3;
+        } else if (msg == DENIED) {
+          _state = 5;
+          return 3;
         } else {
           return 3;
         }
@@ -109,6 +112,9 @@ int Lock::transit(MessageTuple* in_msg, vector<MessageTuple*>& outMsgs,
             _state = 4;
           else
             assert(false);
+          return 3;
+        } else if (msg == DENIED) {
+          _state = 5;
           return 3;
         } else {
           return 3;
@@ -127,11 +133,15 @@ int Lock::transit(MessageTuple* in_msg, vector<MessageTuple*>& outMsgs,
           else
             assert(false);
           return 3;
+        } else if (msg == DENIED) {
+          _state = 5;
+          return 3;
         } else {
           return 3;
         }
         break;
       case 4:
+      case 5:
         if (msg == REQUEST) {
           int session = determineSession(lmsg);
           outMsgs.push_back(createResponse(in_msg, DENIED, lock_id_,

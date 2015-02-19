@@ -1,6 +1,5 @@
 #define GRANTED "granted"
-#define DENIED "denied"
-#define FAILED "failed"
+#define DENIED "DENIED"
 #define REQUEST "request"
 #define RELEASE "release"
 #define SIGNUP "signup"
