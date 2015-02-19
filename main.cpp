@@ -20,7 +20,7 @@ using namespace std;
 #include "channel.h"
 #include "lock_utils.h"
 
-#define SCENARIO 2
+#define SCENARIO 3
 
 ProbVerifier pvObj ;
 GlobalState* startPoint;
@@ -42,6 +42,12 @@ void setupLockedState(StoppingState& stop, int m, int f, int b) {
   for (auto &c : channels[f])
     stop.addAllow(new ChannelSnapshot(), c->getName());
   for (auto &c : channels[b])
+    stop.addAllow(new ChannelSnapshot(), c->getName());
+}
+
+void setupDeniedState(StoppingState& stop, int m) {
+  stop.addAllow(new LockSnapshot(5, m), locks[m].getName());
+  for (auto &c : channels[m])
     stop.addAllow(new ChannelSnapshot(), c->getName());
 }
 
@@ -122,16 +128,29 @@ int main( int argc, char* argv[] )
     StoppingState stop_group1_locked(&start_point);
     setupLockedState(stop_group1_locked, 2, 0, 1);
     pvObj.addSTOP(&stop_group1_locked);
+
+    StoppingState stop_group1_denied(&start_point);
+    setupDeniedState(stop_group1_denied, 2);
+    pvObj.addSTOP(&stop_group1_denied);
 #endif
+
 #if (SCENARIO >= 2)
     StoppingState stop_group2_locked(&start_point);
     setupLockedState(stop_group2_locked, 4, 1, 3);
     pvObj.addSTOP(&stop_group2_locked);
+
+    StoppingState stop_group2_denied(&start_point);
+    setupDeniedState(stop_group2_denied, 4);
+    pvObj.addSTOP(&stop_group2_denied);
 #endif
 #if (SCENARIO >= 3)
     StoppingState stop_group3_locked(&start_point);
     setupLockedState(stop_group3_locked, 1, 2, 4);
     pvObj.addSTOP(&stop_group3_locked);
+
+    StoppingState stop_group3_denied(&start_point);
+    setupDeniedState(stop_group3_denied, 1);
+    pvObj.addSTOP(&stop_group3_denied);
 #endif
     /*
     // state LF
@@ -246,7 +265,7 @@ int main( int argc, char* argv[] )
     
     // Start the procedure of probabilistic verification.
     // Specify the maximum probability depth to be explored
-    pvObj.start(4, startPoint);
+    pvObj.start(7, startPoint);
     
     //srvc->printTraversed();
       
