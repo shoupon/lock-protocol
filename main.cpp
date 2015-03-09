@@ -20,7 +20,7 @@ using namespace std;
 #include "channel.h"
 #include "lock_utils.h"
 
-#define SCENARIO 3
+#define SCENARIO 4
 
 ProbVerifier pvObj ;
 GlobalState* startPoint;
@@ -86,7 +86,7 @@ int main( int argc, char* argv[] )
 #else
     locks.push_back(Lock(4));
 #endif
-#if (SCENRAIO >= 4)
+#if (SCENARIO >= 4)
     locks.push_back(Lock(5, 0, 1));
 #else
     locks.push_back(Lock(5));
@@ -151,6 +151,15 @@ int main( int argc, char* argv[] )
     StoppingState stop_group3_denied(&start_point);
     setupDeniedState(stop_group3_denied, 1);
     pvObj.addSTOP(&stop_group3_denied);
+#endif
+#if (SCENARIO >= 4)
+    StoppingState stop_group4_locked(&start_point);
+    setupLockedState(stop_group4_locked, 5, 0, 1);
+    pvObj.addSTOP(&stop_group4_locked);
+
+    StoppingState stop_group4_denied(&start_point);
+    setupDeniedState(stop_group4_denied, 5);
+    pvObj.addSTOP(&stop_group4_denied);
 #endif
     /*
     // state LF
@@ -265,7 +274,7 @@ int main( int argc, char* argv[] )
     
     // Start the procedure of probabilistic verification.
     // Specify the maximum probability depth to be explored
-    pvObj.start(7, startPoint);
+    pvObj.start(6, startPoint);
     
     //srvc->printTraversed();
       
