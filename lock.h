@@ -75,6 +75,7 @@ public:
   ~LockMessage() {}
   size_t numParams() { return 2; }
   int getParam(size_t arg) { return arg? session_: master_; }
+  size_t getBytes() const { return MessageTuple::getBytes() + sizeof(int) * 2; }
   
   string toString() const;
   LockMessage* clone() const;
@@ -95,6 +96,7 @@ public:
       : ss_state_(state), ss_master_(master) {}
   ~LockSnapshot() {} ;
   int curStateId() const { return ss_state_; }
+  size_t getBytes() const { return sizeof(int) * 2; }
   // Returns the name of current state as specified in the input file
   string toString() const;
   // Cast the Snapshot into a integer. Used in HashTable

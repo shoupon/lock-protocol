@@ -114,6 +114,14 @@ ChannelSnapshot::ChannelSnapshot(const vector<shared_ptr<LockMessage>>& msgs) {
   ss_msgs_ = msgs;
 }
 
+size_t ChannelSnapshot::getBytes() const {
+  shared_ptr<LockMessage> ptr;
+  size_t sz = sizeof(ss_msgs_) + sizeof(ptr) * ss_msgs_.size();
+  for (auto p : ss_msgs_)
+    sz += p->getBytes();
+  return sz;
+}
+
 string ChannelSnapshot::toString() const {
   if (ss_msgs_.size() == 2)
     return string("[") + ss_msgs_[0]->toString() + ","

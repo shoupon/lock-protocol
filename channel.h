@@ -55,6 +55,7 @@ public:
   ChannelSnapshot() {}
   ChannelSnapshot(const vector<shared_ptr<LockMessage> >& msgs);
   int curStateId() const { return ss_msgs_.size(); }
+  size_t getBytes() const;
   // Returns the name of current state as specified in the input file
   string toString() const;
   string toReadable() const;
