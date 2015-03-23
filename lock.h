@@ -65,8 +65,7 @@ public:
       : MessageTuple(src, dest, srcMsg, destMsg, subject),
         master_(master), session_(session) {}
   LockMessage(const LockMessage& msg)
-      : MessageTuple(msg._src, msg._dest,
-                     msg._srcMsg, msg._destMsg, msg._subject),
+      : MessageTuple(msg._dest, msg._destMsg, msg._subject),
         master_(msg.master_), session_(msg.session_) {}
   LockMessage(int src, int dest, int srcMsg, int destMsg, int subject,
               const LockMessage& msg)

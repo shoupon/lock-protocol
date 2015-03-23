@@ -129,7 +129,7 @@ string ChannelSnapshot::toString() const {
   else if (ss_msgs_.size() == 1)
     return string("[") + ss_msgs_[0]->toString() + "]";
   else
-    return "[]";
+    return "e";
 }
 
 string ChannelSnapshot::toReadable() const {
