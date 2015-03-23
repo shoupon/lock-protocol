@@ -19,7 +19,6 @@ using namespace std;
 #include "../prob_verify/sync.h"
 #include "identifiers.h"
 #include "lock.h"
-#include "competitor.h"
 
 class ChannelSnapshot;
 
