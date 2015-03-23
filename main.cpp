@@ -66,6 +66,39 @@ int main( int argc, char* argv[] )
     Clock clock;
     pvObj.addMachine(&clock);
 
+    // Register the names of the locks
+    StateMachine::machineToInt("lock(0)");
+    StateMachine::machineToInt("lock(1)");
+    StateMachine::machineToInt("lock(2)");
+    StateMachine::machineToInt("lock(3)");
+    StateMachine::machineToInt("lock(4)");
+    StateMachine::machineToInt("lock(5)");
+
+    channels.clear();
+    channels.resize(nLocks);
+#if (SCENARIO >= 1)
+    channels[0].push_back(shared_ptr<Channel>(new Channel(0, 2)));
+    channels[1].push_back(shared_ptr<Channel>(new Channel(1, 2)));
+    channels[2].push_back(shared_ptr<Channel>(new Channel(2, 0)));
+    channels[2].push_back(shared_ptr<Channel>(new Channel(2, 1)));
+#endif
+#if (SCENARIO >= 2)
+    channels[1].push_back(shared_ptr<Channel>(new Channel(1, 4)));
+    channels[3].push_back(shared_ptr<Channel>(new Channel(3, 4)));
+    channels[4].push_back(shared_ptr<Channel>(new Channel(4, 1)));
+    channels[4].push_back(shared_ptr<Channel>(new Channel(4, 3)));
+#endif
+#if (SCENARIO >= 4)
+    channels[0].push_back(shared_ptr<Channel>(new Channel(0, 5)));
+    channels[1].push_back(shared_ptr<Channel>(new Channel(1, 5)));
+    channels[5].push_back(shared_ptr<Channel>(new Channel(5, 0)));
+    channels[5].push_back(shared_ptr<Channel>(new Channel(5, 1)));
+#endif
+    for (auto& cs : channels) {
+      for (auto& c : cs)
+        pvObj.addMachine(c.get());
+    }
+
     // Create StateMachine objects
     Lock::setNumLocks(nLocks);
     locks.clear();
@@ -93,17 +126,6 @@ int main( int argc, char* argv[] )
 #endif
     for (auto& l : locks) {
       pvObj.addMachine(&l);
-    }
-
-    channels.clear();
-    for (int i = 0; i < nLocks; ++i) {
-      channels.resize(i + 1);
-      for (int j = 0; j < nLocks; ++j) {
-        if (i != j) {
-          channels[i].push_back(shared_ptr<Channel>(new Channel(i, j)));
-          pvObj.addMachine(channels[i].back().get());
-        }
-      }
     }
 
     //LockService *srvc = new LockService(2,0,1);
@@ -274,7 +296,7 @@ int main( int argc, char* argv[] )
     
     // Start the procedure of probabilistic verification.
     // Specify the maximum probability depth to be explored
-    pvObj.start(6, startPoint);
+    pvObj.start(2, startPoint);
     
     //srvc->printTraversed();
       
