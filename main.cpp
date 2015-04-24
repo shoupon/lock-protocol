@@ -20,7 +20,7 @@ using namespace std;
 #include "channel.h"
 #include "lock_utils.h"
 
-#define SCENARIO 4
+#define SCENARIO 5
 
 ProbVerifier pvObj ;
 GlobalState* startPoint;
@@ -51,7 +51,7 @@ void setupDeniedState(StoppingState& stop, int m) {
     stop.addAllow(new ChannelSnapshot(), c->getName());
 }
 
-int nLocks = 6;
+int nLocks = 7;
 
 int main( int argc, char* argv[] )
 {
@@ -73,6 +73,7 @@ int main( int argc, char* argv[] )
     StateMachine::machineToInt("lock(3)");
     StateMachine::machineToInt("lock(4)");
     StateMachine::machineToInt("lock(5)");
+    StateMachine::machineToInt("lock(6)");
 
     channels.clear();
     channels.resize(nLocks);
@@ -94,6 +95,10 @@ int main( int argc, char* argv[] )
     channels[5].push_back(shared_ptr<Channel>(new Channel(5, 0)));
     channels[5].push_back(shared_ptr<Channel>(new Channel(5, 1)));
 #endif
+#if (SCENARIO >= 5)
+    channels[1].push_back(shared_ptr<Channel>(new Channel(1, 6)));
+    channels[6].push_back(shared_ptr<Channel>(new Channel(6, 1)));
+#endif
     for (auto& cs : channels) {
       for (auto& c : cs)
         pvObj.addMachine(c.get());
@@ -103,8 +108,10 @@ int main( int argc, char* argv[] )
     Lock::setNumLocks(nLocks);
     locks.clear();
     locks.push_back(Lock(0));
-#if (SCENARIO >= 3)
+#if (SCENARIO == 3 || SCENARIO == 4)
     locks.push_back(Lock(1, 2, 4));
+#elif (SCENARIO == 5)
+    locks.push_back(Lock(1, 2, 4, 5, 6));
 #else
     locks.push_back(Lock(1));
 #endif
@@ -124,6 +131,8 @@ int main( int argc, char* argv[] )
 #else
     locks.push_back(Lock(5));
 #endif
+    locks.push_back(Lock(6));
+
     for (auto& l : locks) {
       pvObj.addMachine(&l);
     }
@@ -182,6 +191,14 @@ int main( int argc, char* argv[] )
     StoppingState stop_group4_denied(&start_point);
     setupDeniedState(stop_group4_denied, 5);
     pvObj.addSTOP(&stop_group4_denied);
+#endif
+#if (SCENARIO >= 5)
+    StoppingState stop_group5_locked(&start_point);
+    setupLockedState(stop_group5_locked, 1, 5, 6);
+    pvObj.addSTOP(&stop_group5_locked);
+    StoppingState stop_group5_denied(&start_point);
+    setupDeniedState(stop_group5_denied, 1);
+    pvObj.addSTOP(&stop_group5_denied);
 #endif
     /*
     // state LF
@@ -291,12 +308,12 @@ int main( int argc, char* argv[] )
     pvObj.addPrintStop(printStop) ;
     ProbVerifierConfig config;
     config.setLowProbBound(0.0001);
-    config.setBoundMethod(DFS_BOUND);
+    config.setBoundMethod(DFS_ONE_STEP);
     pvObj.configure(config);
     
     // Start the procedure of probabilistic verification.
     // Specify the maximum probability depth to be explored
-    pvObj.start(2, startPoint);
+    pvObj.start(1, startPoint);
     
     //srvc->printTraversed();
       
