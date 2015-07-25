@@ -43,22 +43,14 @@ int Channel::transit(MessageTuple* in_msg, vector<MessageTuple*>& out_msgs,
       return -1;
     }
   } else if (typeid(*in_msg) == typeid(ClockMessage)) {
-    auto cmsg = dynamic_cast<ClockMessage*>(in_msg);
-    high_prob = false;
     if (!start_idx) {
-      bool found = false;
-      do {
-        auto it = msgs_in_transit_.begin();
-        found = false;
-        while (it != msgs_in_transit_.end()) {
-          if ((*it)->getSession() == cmsg->getMaster()) {
-            msgs_in_transit_.erase(it);
-            found = true;
-            break;
-          }
-          ++it;
-        }
-      } while (found);
+      auto cmsg = dynamic_cast<ClockMessage*>(in_msg);
+      int did = cmsg->getMaster();
+      high_prob = false;
+      for (auto msg_ptr : msgs_in_transit_) {
+        if (msg_ptr->getCreator() == did)
+          msg_ptr->expireCreator();
+      }
       return 1;
     } else {
       return -1;
@@ -74,16 +66,8 @@ int Channel::nullInputTrans(vector<MessageTuple*>& out_msgs,
   if (start_idx || msgs_in_transit_.empty())
     return -1;
   else {
-    auto lmsg = dynamic_cast<LockMessage*>(msgs_in_transit_[0].get());
     out_msgs.push_back(createDelivery());
-    int session = lmsg->getSession();
     msgs_in_transit_.erase(msgs_in_transit_.begin());
-    if (msgs_in_transit_.empty() ||
-        msgs_in_transit_[0]->getSession() != session) {
-      out_msgs.push_back(new ClockMessage(0, machineToInt(CLOCK_NAME),
-                                          0, messageToInt(SIGNOFF), macId(),
-                                          session, macId()));
-    }
     return 1;
   }
 }

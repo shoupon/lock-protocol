@@ -23,30 +23,15 @@ int Clock::transit(MessageTuple* in_msg, vector<MessageTuple*>& out_msgs,
   int follower_mac_id = cmsg->getFollwer();
   string msg = IntToMessage(cmsg->destMsgId());
   if (msg == SIGNUP) {
-    // determine if creator is already on the list
-    for (int i = 0; i < creators_.size(); ++i) {
-      if (creators_[i] == creator) {
-        followers_[i].insert(follower_mac_id);
-        return 1;
-      }
+    // determine if owner is already on the list
+    // owner should be the first one who signs up
+    if (registrants_.find(creator) == registrants_.end()) {
+      registrants_[creator] = set<int>();
+      registrants_[creator].insert(creator);
+    } else {
+      registrants_[creator].insert(follower_mac_id);
     }
-    // if not on the list
-    creators_.push_back(creator);
-    followers_.push_back(set<int>());
-    followers_.back().insert(follower_mac_id);
     return 1;
-  } else if (msg == SIGNOFF) {
-    for (int i = 0; i < creators_.size(); ++i) {
-      if (creators_[i] == creator) {
-        followers_[i].erase(followers_[i].find(follower_mac_id));
-        if (followers_[i].size() == 0) {
-          followers_.erase(followers_.begin() + i);
-          creators_.erase(creators_.begin() + i);
-        }
-        return 1;
-      }
-    }
-    return -1;
   } else {
     assert(false);
     return -1;
@@ -55,61 +40,58 @@ int Clock::transit(MessageTuple* in_msg, vector<MessageTuple*>& out_msgs,
 
 int Clock::nullInputTrans(vector<MessageTuple*>& out_msgs,
                           bool& high_prob, int start_idx) {
-  if (start_idx || followers_.empty())
+  if (registrants_.empty())
     return -1;
+  if (start_idx < 0 || start_idx >= registrants_.size())
+    return -1;
+
   high_prob = true;
+  auto active_set = registrants_.begin();
+  int k = start_idx;
+  while (k--)
+    active_set++;
+  sendAlarm(active_set, out_msgs);
+  registrants_.erase(active_set);
+  return start_idx + 1;
+}
+
+// Send alarm messages to all registrants that are registered with deadline id
+// in d->first, also to all channels
+void Clock::sendAlarm(map<int, set<int> >::const_iterator d,
+                      vector<MessageTuple*>& out_msgs) {
+  int did = d->first;
   int msg_id = messageToInt(ALARM);
-  for (auto mac_id : followers_.front())
+  for (auto mac_id : d->second)
     out_msgs.push_back(new ClockMessage(0, mac_id, 0, msg_id, macId(),
-                                        creators_.front(), mac_id));
-  creators_.erase(creators_.begin());
-  followers_.erase(followers_.begin());
-  return 1;
+                                        did, did));
+  for (auto mac_id : channel_ids_)
+    out_msgs.push_back(new ClockMessage(0, mac_id, 0, msg_id, macId(),
+                                        did, did));
 }
 
 void Clock::restore(const StateSnapshot* snapshot) {
   auto css = dynamic_cast<const ClockSnapshot*>(snapshot);
-  creators_ = css->ss_creators_;
-  followers_ = css->ss_followers_;
+  registrants_ = css->ss_registrants_;
 }
 
 StateSnapshot* Clock::curState() {
-  return new ClockSnapshot(creators_, followers_);
+  return new ClockSnapshot(registrants_);
 }
 
 void Clock::reset() {
-  creators_.clear();
-  followers_.clear();
+  registrants_.clear();
 }
 
 int Clock::moreImminent(int a, int b) {
-  int ai = -1;
-  int bi = -1;
-  for (auto c : creators_) {
-    ai++;
-    if (c == a)
-      break;
-  }
-  for (auto c : creators_) {
-    bi++;
-    if (c == b)
-      break;
-  }
-  if (ai < bi)
-    return a;
-  else if (ai > bi)
-    return b;
-  else
-    assert(false);
+  // obsolete
   return -1;
 }
 
 const int ClockSnapshot::kReadable = 1;
 const int ClockSnapshot::kString = 2;
 
-ClockSnapshot::ClockSnapshot(const vector<int>& creators,
-                             const vector<set<int> >& followers)
-    : ss_creators_(creators), ss_followers_(followers) {
+ClockSnapshot::ClockSnapshot(const map<int, set<int> >& registrants)
+    : ss_registrants_(registrants) {
   ;
 }
 
@@ -125,12 +107,12 @@ string ClockSnapshot::stringify(int type) const {
   stringstream ss;
   ss << "[";
   int k = 0;
-  for (int i = 0; i < ss_creators_.size(); ++i) {
+  for (const auto pair : ss_registrants_) {
     if (k++)
       ss << ",";
-    ss << ss_creators_[i] << ":(";
+    ss << pair.first << ":(";
     int l = 0;
-    for (auto mid : ss_followers_[i]) {
+    for (auto mid : pair.second) {
       if (l++)
         ss << ",";
       if (type == kReadable)

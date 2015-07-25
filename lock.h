@@ -83,9 +83,10 @@ public:
   LockMessage* clone() const;
 
   int getCreator() const { return master_; }
+  void expireCreator() { assert(master_ > 0); master_ = ~master_; }
   int getSession() const { return session_; }
 private:    
-  const int master_;
+  int master_;
   const int session_;
 };
 

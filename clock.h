@@ -9,6 +9,7 @@
 #ifndef LOCKPROTOCOL_CLOCK_H
 #define LOCKPROTOCOL_CLOCK_H
 
+#include <map>
 #include <set>
 using namespace std;
 
@@ -30,10 +31,17 @@ public:
   void reset();
   string getName() const { return "clock"; }
 
+  void registerChannel(int channel_id) { channel_ids_.push_back(channel_id); }
+  void clearChannel() { channel_ids_.clear(); }
+
+  // obsolete
   int moreImminent(int a, int b);
 private:
-  vector<int> creators_;
-  vector<set<int> > followers_;
+  void sendAlarm(map<int, set<int> >::const_iterator d,
+                 vector<MessageTuple*>& out_msgs);
+
+  vector<int> channel_ids_;
+  map<int, set<int> > registrants_;
 };
 
 class ClockSnapshot: public StateSnapshot {
@@ -42,9 +50,8 @@ class ClockSnapshot: public StateSnapshot {
   static const int kReadable;
   static const int kString;
 public:
-  ClockSnapshot(const vector<int>& creators,
-                const vector<set<int> >& followers);
-  int curStateId() const { return ss_creators_.size(); }
+  ClockSnapshot(const map<int, set<int> >& registrants);
+  int curStateId() const { return ss_registrants_.size(); }
   string toString() const;
   string toReadable() const;
   int toInt() { return curStateId(); }
@@ -52,8 +59,7 @@ public:
 private:
   string stringify(int type) const;
 
-  vector<int> ss_creators_;
-  vector<set<int> > ss_followers_;
+  map<int, set<int> > ss_registrants_;
 };
 
 class ClockMessage: public MessageTuple {
@@ -68,8 +74,8 @@ public:
   int getMaster() const { return master_id_; }
   int getFollwer() const { return follower_id_; }
 private:
-  int master_id_;
-  int follower_id_;
+  int master_id_;   // deadline id (should coincide with lock master's mac_id
+  int follower_id_; // registrant mac_id
 };
 
 

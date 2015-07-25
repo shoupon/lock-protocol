@@ -20,7 +20,7 @@ using namespace std;
 #include "channel.h"
 #include "lock_utils.h"
 
-#define SCENARIO 5
+#define SCENARIO 1
 
 ProbVerifier pvObj ;
 GlobalState* startPoint;
@@ -100,8 +100,10 @@ int main( int argc, char* argv[] )
     channels[6].push_back(shared_ptr<Channel>(new Channel(6, 1)));
 #endif
     for (auto& cs : channels) {
-      for (auto& c : cs)
+      for (auto& c : cs) {
         pvObj.addMachine(c.get());
+        clock.registerChannel(c->macId());
+      }
     }
 
     // Create StateMachine objects
@@ -313,7 +315,7 @@ int main( int argc, char* argv[] )
     
     // Start the procedure of probabilistic verification.
     // Specify the maximum probability depth to be explored
-    pvObj.start(1, startPoint);
+    pvObj.start(10, startPoint);
     
     //srvc->printTraversed();
       

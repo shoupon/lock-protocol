@@ -66,6 +66,11 @@ int Lock::transit(MessageTuple* in_msg, vector<MessageTuple*>& outMsgs,
       case 0:
         if (msg == REQUEST) {
           master_ = lmsg->getCreator();
+
+          // ignores outdated deadline
+          if (master_ < 0)
+            return 3;
+
           outMsgs.push_back(createResponse(in_msg, GRANTED, lock_id_, master_,
                                            master_));
           outMsgs.push_back(createTiming(in_msg, SIGNUP, master_, macId()));
