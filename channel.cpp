@@ -70,6 +70,7 @@ int Channel::transit(MessageTuple* in_msg, vector<MessageTuple*>& out_msgs,
 
 int Channel::nullInputTrans(vector<MessageTuple*>& out_msgs,
                             bool &high_prob, int start_idx) {
+  high_prob = true;
   if (start_idx || msgs_in_transit_.empty())
     return -1;
   else {
