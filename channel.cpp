@@ -27,12 +27,16 @@ int Channel::transit(MessageTuple* in_msg, vector<MessageTuple*>& out_msgs,
     if (!start_idx) {
       auto cmsg = dynamic_cast<ClockMessage*>(in_msg);
       int did = cmsg->getSession();
-      for (auto msg_ptr : msgs_in_transit_) {
-        if (msg_ptr->getSession() == did) {
-          msg_ptr->expireSession();
+      auto msg_it = msgs_in_transit_.begin();
+      while (msg_it != msgs_in_transit_.end()) {
+        if ((*msg_it)->getSession() == did) {
+          msgs_in_transit_.erase(msg_it);
 #ifdef DELAY_LOW
           high_prob = false;
 #endif
+          msg_it = msgs_in_transit_.begin();
+        } else {
+          msg_it++;
         }
       }
       return 3;
