@@ -315,7 +315,7 @@ int main( int argc, char* argv[] )
     
     // Start the procedure of probabilistic verification.
     // Specify the maximum probability depth to be explored
-    pvObj.start(10, startPoint);
+    pvObj.start(20, startPoint);
     
     //srvc->printTraversed();
       

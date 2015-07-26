@@ -19,18 +19,15 @@ int Clock::transit(MessageTuple* in_msg, vector<MessageTuple*>& out_msgs,
   if (start_idx)
     return -1;
   high_prob = true;
-  int creator = cmsg->getMaster();
-  int follower_mac_id = cmsg->getFollwer();
+  int session = cmsg->getSession();
+  int registrant = cmsg->getRegistrant();
   string msg = IntToMessage(cmsg->destMsgId());
   if (msg == SIGNUP) {
     // determine if owner is already on the list
     // owner should be the first one who signs up
-    if (registrants_.find(creator) == registrants_.end()) {
-      registrants_[creator] = set<int>();
-      registrants_[creator].insert(creator);
-    } else {
-      registrants_[creator].insert(follower_mac_id);
-    }
+    if (registrants_.find(session) == registrants_.end())
+      registrants_[session] = set<int>();
+    registrants_[session].insert(registrant);
     return 1;
   } else {
     assert(false);
@@ -129,15 +126,15 @@ string ClockSnapshot::stringify(int type) const {
 }
 
 ClockMessage::ClockMessage(int src, int dest, int src_msg, int dest_msg,
-                           int subject, int master_id, int follower_id)
+                           int subject, int session_id, int registrant_id)
     : MessageTuple(src, dest, src_msg, dest_msg, subject),
-      master_id_(master_id), follower_id_(follower_id) {
+      session_id_(session_id), registrant_id_(registrant_id) {
   ;
 }
 
 string ClockMessage::toString() const {
   stringstream ss;
   ss << MessageTuple::toString()
-     << "(" << master_id_ << "," << follower_id_ << ")";
+     << "(" << session_id_ << "," << registrant_id_ << ")";
   return ss.str();
 }

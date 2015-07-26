@@ -7,6 +7,7 @@
 //
 
 #include "channel.h"
+#define DELAY_LOW
 
 Channel::Channel(int from, int to)
     : origin_(from), destination_(to) {
@@ -21,6 +22,25 @@ Channel::Channel(int from, int to)
    
 int Channel::transit(MessageTuple* in_msg, vector<MessageTuple*>& out_msgs,
                      bool &high_prob, int start_idx) {
+  high_prob = true;
+  if (typeid(*in_msg) == typeid(ClockMessage)) {
+    if (!start_idx) {
+      auto cmsg = dynamic_cast<ClockMessage*>(in_msg);
+      int did = cmsg->getSession();
+      for (auto msg_ptr : msgs_in_transit_) {
+        if (msg_ptr->getSession() == did) {
+          msg_ptr->expireSession();
+#ifdef DELAY_LOW
+          high_prob = false;
+#endif
+        }
+      }
+      return 3;
+    } else {
+      return -1;
+    }
+  }
+
   if (msgs_in_transit_.size() > 2)
     return -1;
   if (typeid(*in_msg) == typeid(LockMessage)) {
@@ -29,29 +49,10 @@ int Channel::transit(MessageTuple* in_msg, vector<MessageTuple*>& out_msgs,
       auto lmsg = dynamic_cast<LockMessage*>(in_msg);
       msgs_in_transit_.push_back(shared_ptr<LockMessage>(
           new LockMessage(*lmsg)));
-      out_msgs.push_back(new ClockMessage(in_msg->srcID(),
-                                          machineToInt(CLOCK_NAME),
-                                          in_msg->srcMsgId(),
-                                          messageToInt(SIGNUP),
-                                          macId(),
-                                          lmsg->getSession(), macId()));
       return 1;
     } else if (start_idx == 1) {
       high_prob = false;
       return 2;
-    } else {
-      return -1;
-    }
-  } else if (typeid(*in_msg) == typeid(ClockMessage)) {
-    if (!start_idx) {
-      auto cmsg = dynamic_cast<ClockMessage*>(in_msg);
-      int did = cmsg->getMaster();
-      high_prob = false;
-      for (auto msg_ptr : msgs_in_transit_) {
-        if (msg_ptr->getCreator() == did)
-          msg_ptr->expireCreator();
-      }
-      return 1;
     } else {
       return -1;
     }
@@ -74,7 +75,9 @@ int Channel::nullInputTrans(vector<MessageTuple*>& out_msgs,
 
 void Channel::restore(const StateSnapshot* snapshot) {
   auto css = dynamic_cast<const ChannelSnapshot*>(snapshot);
-  msgs_in_transit_ = css->ss_msgs_;
+  msgs_in_transit_.clear();
+  for (auto msg : css->ss_msgs_)
+    msgs_in_transit_.push_back(shared_ptr<LockMessage>(new LockMessage(*msg)));
 }
 
 StateSnapshot* Channel::curState() {
@@ -96,7 +99,8 @@ MessageTuple* Channel::createDelivery() {
 }
 
 ChannelSnapshot::ChannelSnapshot(const vector<shared_ptr<LockMessage>>& msgs) {
-  ss_msgs_ = msgs;
+  for (auto msg : msgs)
+    ss_msgs_.push_back(shared_ptr<LockMessage>(new LockMessage(*msg)));
 }
 
 size_t ChannelSnapshot::getBytes() const {

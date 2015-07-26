@@ -65,17 +65,18 @@ private:
 class ClockMessage: public MessageTuple {
 public:
   ClockMessage(int src, int dest, int src_msg, int dest_msg, int subject,
-               int master_id, int follower_id);
+               int session_id, int registrant_id);
   string toString() const;
   ClockMessage* clone() const { return new ClockMessage(*this); }
   size_t numParams() { return 2; }
-  int getParams(size_t arg) { return (!arg)? master_id_: follower_id_; }
+  int getParams(size_t arg) { return (!arg)? session_id_: registrant_id_; }
 
-  int getMaster() const { return master_id_; }
-  int getFollwer() const { return follower_id_; }
+  int getSession() const { return session_id_; }
+  int getRegistrant() const { return registrant_id_; }
 private:
-  int master_id_;   // deadline id (should coincide with lock master's mac_id
-  int follower_id_; // registrant mac_id
+  int session_id_;   // deadline id (should coincide with lock master's mac_id
+  int registrant_id_; // registrant mac_id
+  
 };
 
 
