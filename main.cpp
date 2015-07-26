@@ -20,7 +20,7 @@ using namespace std;
 #include "channel.h"
 #include "lock_utils.h"
 
-#define SCENARIO 1
+#define SCENARIO 4
 
 ProbVerifier pvObj ;
 GlobalState* startPoint;
@@ -43,6 +43,12 @@ void setupLockedState(StoppingState& stop, int m, int f, int b) {
     stop.addAllow(new ChannelSnapshot(), c->getName());
   for (auto &c : channels[b])
     stop.addAllow(new ChannelSnapshot(), c->getName());
+}
+
+void setupResetState(StoppingState& stop, int m, int f, int b) {
+  stop.addAllow(new LockSnapshot(0, -1), locks[m].getName());
+  stop.addAllow(new LockSnapshot(0, -1), locks[f].getName());
+  stop.addAllow(new LockSnapshot(0, -1), locks[b].getName());
 }
 
 void setupDeniedState(StoppingState& stop, int m) {
@@ -165,8 +171,11 @@ int main( int argc, char* argv[] )
     StoppingState stop_group1_denied(&start_point);
     setupDeniedState(stop_group1_denied, 2);
     pvObj.addSTOP(&stop_group1_denied);
-#endif
 
+    StoppingState stop_group1_reset(&start_point);
+    setupResetState(stop_group1_reset, 2, 0, 1);
+    pvObj.addSTOP(&stop_group1_reset);
+#endif
 #if (SCENARIO >= 2)
     StoppingState stop_group2_locked(&start_point);
     setupLockedState(stop_group2_locked, 4, 1, 3);
@@ -175,6 +184,10 @@ int main( int argc, char* argv[] )
     StoppingState stop_group2_denied(&start_point);
     setupDeniedState(stop_group2_denied, 4);
     pvObj.addSTOP(&stop_group2_denied);
+
+    StoppingState stop_group2_reset(&start_point);
+    setupResetState(stop_group2_reset, 4, 1, 3);
+    pvObj.addSTOP(&stop_group2_reset);
 #endif
 #if (SCENARIO >= 3)
     StoppingState stop_group3_locked(&start_point);
@@ -184,6 +197,10 @@ int main( int argc, char* argv[] )
     StoppingState stop_group3_denied(&start_point);
     setupDeniedState(stop_group3_denied, 1);
     pvObj.addSTOP(&stop_group3_denied);
+
+    StoppingState stop_group3_reset(&start_point);
+    setupResetState(stop_group3_reset, 1, 2, 4);
+    pvObj.addSTOP(&stop_group3_reset);
 #endif
 #if (SCENARIO >= 4)
     StoppingState stop_group4_locked(&start_point);
