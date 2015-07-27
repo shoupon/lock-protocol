@@ -25,8 +25,14 @@ int Clock::transit(MessageTuple* in_msg, vector<MessageTuple*>& out_msgs,
   if (msg == SIGNUP) {
     // determine if owner is already on the list
     // owner should be the first one who signs up
-    if (registrants_.find(session) == registrants_.end())
+    if (registrants_.find(session) == registrants_.end()) {
+      // also record the deadlines submitted before this submission
+      precursors_[session] = set<int>();
+      for (auto pair : registrants_)
+        precursors_[session].insert(pair.first);
+
       registrants_[session] = set<int>();
+    }
     registrants_[session].insert(registrant);
     return 1;
   } else {
@@ -48,6 +54,7 @@ int Clock::nullInputTrans(vector<MessageTuple*>& out_msgs,
   while (k--)
     active_set++;
   sendAlarm(active_set, out_msgs);
+  precursors_.erase(precursors_.find(active_set->first));
   registrants_.erase(active_set);
   return start_idx + 1;
 }
@@ -64,15 +71,22 @@ void Clock::sendAlarm(map<int, set<int> >::const_iterator d,
   for (auto mac_id : channel_ids_)
     out_msgs.push_back(new ClockMessage(0, mac_id, 0, msg_id, macId(),
                                         did, did));
+  auto pit = precursors_.find(did);
+  for (auto session : pit->second) {
+    for (auto mac_id : channel_ids_)
+      out_msgs.push_back(new ClockMessage(0, mac_id, 0, msg_id, macId(),
+                                          session, session));
+  }
 }
 
 void Clock::restore(const StateSnapshot* snapshot) {
   auto css = dynamic_cast<const ClockSnapshot*>(snapshot);
   registrants_ = css->ss_registrants_;
+  precursors_ = css->ss_precursors_;
 }
 
 StateSnapshot* Clock::curState() {
-  return new ClockSnapshot(registrants_);
+  return new ClockSnapshot(registrants_, precursors_);
 }
 
 void Clock::reset() {
@@ -87,8 +101,9 @@ int Clock::moreImminent(int a, int b) {
 const int ClockSnapshot::kReadable = 1;
 const int ClockSnapshot::kString = 2;
 
-ClockSnapshot::ClockSnapshot(const map<int, set<int> >& registrants)
-    : ss_registrants_(registrants) {
+ClockSnapshot::ClockSnapshot(const map<int, set<int> >& registrants,
+                             const map<int, set<int> >& precursors)
+    : ss_registrants_(registrants), ss_precursors_(precursors) {
   ;
 }
 
@@ -104,6 +119,7 @@ string ClockSnapshot::stringify(int type) const {
   stringstream ss;
   ss << "[";
   int k = 0;
+  auto pit = ss_precursors_.begin();
   for (const auto pair : ss_registrants_) {
     if (k++)
       ss << ",";
@@ -120,6 +136,16 @@ string ClockSnapshot::stringify(int type) const {
         assert(false);
     }
     ss << ")";
+
+    ss << ",(";
+    l = 0;
+    for (auto did : pit->second) {
+      if (l++)
+        ss << ",";
+      ss << did;
+    }
+    ss << ")";
+    pit++;
   }
   ss << "]";
   return ss.str();

@@ -42,6 +42,7 @@ private:
 
   vector<int> channel_ids_;
   map<int, set<int> > registrants_;
+  map<int, set<int> > precursors_;
 };
 
 class ClockSnapshot: public StateSnapshot {
@@ -50,7 +51,8 @@ class ClockSnapshot: public StateSnapshot {
   static const int kReadable;
   static const int kString;
 public:
-  ClockSnapshot(const map<int, set<int> >& registrants);
+  ClockSnapshot(const map<int, set<int> >& registrants,
+                const map<int, set<int> >& precursors);
   int curStateId() const { return ss_registrants_.size(); }
   string toString() const;
   string toReadable() const;
@@ -60,6 +62,7 @@ private:
   string stringify(int type) const;
 
   map<int, set<int> > ss_registrants_;
+  map<int, set<int> > ss_precursors_;
 };
 
 class ClockMessage: public MessageTuple {
