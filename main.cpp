@@ -21,7 +21,7 @@ using namespace std;
 #include "lock_utils.h"
 #include "fair-strategy.h"
 
-#define SCENARIO 3
+#define SCENARIO 4
 
 ProbVerifier pvObj ;
 GlobalState* startPoint;
@@ -162,7 +162,7 @@ int main( int argc, char* argv[] )
 
     FairStrategy fair_strategy;
     map<int, IdStatePairs> strategy_config;
-#if (SCENARIO == 3)
+#if (SCENARIO >= 3)
     strategy_config[locks[1].macId()] = IdStatePairs();
     strategy_config[locks[1].macId()][locks[2].macId()] = -1;
     strategy_config[locks[1].macId()][locks[4].macId()] = -1;
@@ -172,6 +172,13 @@ int main( int argc, char* argv[] )
     strategy_config[locks[4].macId()] = IdStatePairs();
     strategy_config[locks[4].macId()][locks[1].macId()] = 0;
     strategy_config[locks[4].macId()][locks[2].macId()] = -1;
+#endif
+#if (SCENARIO >= 4)
+    strategy_config[locks[5].macId()] = IdStatePairs();
+    strategy_config[locks[5].macId()][locks[0].macId()] = -1;
+    strategy_config[locks[5].macId()][locks[1].macId()] = 0;
+#endif
+#if (SCENARIO >= 3)
     fair_strategy.initialize(strategy_config);
 #endif
 
@@ -190,14 +197,14 @@ int main( int argc, char* argv[] )
     StateMachine::dumpMachineTable();
 
     // Configure GlobalState
-#if (SCENARIO == 3)
+#if (SCENARIO >= 3)
     GlobalState::setStrategy(&fair_strategy);
 #endif
 
     // Specify the starting state
     GlobalState::setService(&srvc);
     GlobalState start_point(pvObj.getMachinePtrs());
-#if (SCENARIO == 3)
+#if (SCENARIO >= 3)
     start_point.setStrategyState(new FairStrategyState(strategy_config));
 #endif
 
@@ -252,7 +259,7 @@ int main( int argc, char* argv[] )
     pvObj.addSTOP(&stop_group3_reset);
 #endif
     */
-#if (SCENARIO == 3)
+#if (SCENARIO >= 3)
     StoppingState stop_group3_reset(&start_point);
     setupResetState(stop_group3_reset, 1, 2, 4);
     pvObj.addSTOP(&stop_group3_reset);
@@ -265,6 +272,7 @@ int main( int argc, char* argv[] )
     setupFailureState(stop_group3_failure, 1, 2, 4);
     pvObj.addEND(&stop_group3_failure);
 #endif
+    /*
 #if (SCENARIO >= 4)
     StoppingState stop_group4_locked(&start_point);
     setupLockedState(stop_group4_locked, 5, 0, 1);
@@ -274,6 +282,7 @@ int main( int argc, char* argv[] )
     setupDeniedState(stop_group4_denied, 5);
     pvObj.addSTOP(&stop_group4_denied);
 #endif
+*/
 #if (SCENARIO >= 5)
     StoppingState stop_group5_locked(&start_point);
     setupLockedState(stop_group5_locked, 1, 5, 6);
@@ -395,7 +404,7 @@ int main( int argc, char* argv[] )
     
     // Start the procedure of probabilistic verification.
     // Specify the maximum probability depth to be explored
-    pvObj.start(20, new GlobalState(&start_point));
+    pvObj.start(1, new GlobalState(&start_point));
     
     //srvc->printTraversed();
       
