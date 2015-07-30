@@ -16,21 +16,41 @@ int Lock::clock_id_;
 
 Lock::Lock(int k)
     : lock_id_(k), active_(false), front_(-1), back_(-1),
-      front_second_(front_), back_second_(back_) {
+      front_second_(front_), back_second_(back_),
+      uni_direction_(false) {
   initialize();
   reset();
 }
 
 Lock::Lock(int k, int front, int back)
     : lock_id_(k), active_(true), front_(front), back_(back),
-      front_second_(front_), back_second_(back_) {
+      front_second_(front_), back_second_(back_),
+      uni_direction_(false) {
+  initialize();
+  reset();
+}
+
+Lock::Lock(int k, int front, int back, bool uni_direction)
+    : lock_id_(k), active_(true), front_(front), back_(back),
+      front_second_(front_), back_second_(back_),
+      uni_direction_(uni_direction) {
   initialize();
   reset();
 }
 
 Lock::Lock(int k, int front, int back, int front_second, int back_second)
     : lock_id_(k), active_(true), front_(front), back_(back),
-      front_second_(front_second), back_second_(back_second) {
+      front_second_(front_), back_second_(back_),
+      uni_direction_(false) {
+  initialize();
+  reset();
+}
+
+Lock::Lock(int k, int front, int back, int front_second, int back_second,
+           bool uni_direction)
+    : lock_id_(k), active_(true), front_(front), back_(back),
+      front_second_(front_), back_second_(back_),
+      uni_direction_(uni_direction) {
   initialize();
   reset();
 }
@@ -250,6 +270,8 @@ int Lock::transit(MessageTuple* in_msg, vector<MessageTuple*>& outMsgs,
         }
         break;
       default:
+        cout << "_state = " << _state << endl;
+        cout << "msg = " << in_msg->toReadable() << endl;
         assert(false);
         break;
     }
@@ -257,6 +279,17 @@ int Lock::transit(MessageTuple* in_msg, vector<MessageTuple*>& outMsgs,
     //ClockMessage *cmsg = dynamic_cast<ClockMessage *>(in_msg);
     string msg = IntToMessage(in_msg->destMsgId());
     if (msg == ALARM) {
+      if (uni_direction_) {
+        if (_state == 4) {
+          reset();
+          _state = 10;
+          return 3;
+        } else if (_state != 1) {
+          reset();
+          _state = 9;
+          return 3;
+        }
+      }
       reset();
       return 3;
     }

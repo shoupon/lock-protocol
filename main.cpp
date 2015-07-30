@@ -48,8 +48,22 @@ void setupLockedState(StoppingState& stop, int m, int f, int b) {
 
 void setupResetState(StoppingState& stop, int m, int f, int b) {
   stop.addAllow(new LockSnapshot(0, -1), locks[m].getName());
+  for (auto &c : channels[m])
+    stop.addAllow(new ChannelSnapshot(), c->getName());
+  //stop.addAllow(new LockSnapshot(0, -1), locks[f].getName());
+  //stop.addAllow(new LockSnapshot(0, -1), locks[b].getName());
+}
+
+void setupSuccessState(StoppingState& stop, int m, int f, int b) {
+  stop.addAllow(new LockSnapshot(10, -1), locks[m].getName());
   stop.addAllow(new LockSnapshot(0, -1), locks[f].getName());
   stop.addAllow(new LockSnapshot(0, -1), locks[b].getName());
+}
+
+void setupFailureState(StoppingState& stop, int m, int f, int b) {
+  stop.addAllow(new LockSnapshot(9, -1), locks[m].getName());
+  //stop.addAllow(new LockSnapshot(0, -1), locks[f].getName());
+  //stop.addAllow(new LockSnapshot(0, -1), locks[b].getName());
 }
 
 void setupDeniedState(StoppingState& stop, int m) {
@@ -118,7 +132,7 @@ int main( int argc, char* argv[] )
     locks.clear();
     locks.push_back(Lock(0));
 #if (SCENARIO == 3 || SCENARIO == 4)
-    locks.push_back(Lock(1, 2, 4));
+    locks.push_back(Lock(1, 2, 4, true));
 #elif (SCENARIO == 5)
     locks.push_back(Lock(1, 2, 4, 5, 6));
 #else
@@ -194,6 +208,7 @@ int main( int argc, char* argv[] )
         stop_zero.addAllow(new ChannelSnapshot(), c->getName());
     }
     pvObj.addSTOP(&stop_zero);
+/*
 #if (SCENARIO >= 1)
     StoppingState stop_group1_locked(&start_point);
     setupLockedState(stop_group1_locked, 2, 0, 1);
@@ -232,6 +247,20 @@ int main( int argc, char* argv[] )
     StoppingState stop_group3_reset(&start_point);
     setupResetState(stop_group3_reset, 1, 2, 4);
     pvObj.addSTOP(&stop_group3_reset);
+#endif
+    */
+#if (SCENARIO == 3)
+    StoppingState stop_group3_reset(&start_point);
+    setupResetState(stop_group3_reset, 1, 2, 4);
+    pvObj.addSTOP(&stop_group3_reset);
+
+    StoppingState stop_group3_success(&start_point);
+    setupSuccessState(stop_group3_success, 1, 2, 4);
+    pvObj.addEND(&stop_group3_success);
+
+    StoppingState stop_group3_failure(&start_point);
+    setupFailureState(stop_group3_failure, 1, 2, 4);
+    pvObj.addEND(&stop_group3_failure);
 #endif
 #if (SCENARIO >= 4)
     StoppingState stop_group4_locked(&start_point);

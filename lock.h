@@ -25,7 +25,10 @@ public:
   // k: Identifier of the lock
   Lock(int k);
   Lock(int k, int front, int back);
+  Lock(int k, int front, int back, bool uni_direction);
   Lock(int k, int front, int back, int front_second, int back_second);
+  Lock(int k, int front, int back, int front_second, int back_second,
+       bool uni_direction);
   
   int transit(MessageTuple* inMsg, vector<MessageTuple*>& outMsgs,
                       bool& high_prob, int startIdx = 0);
@@ -53,6 +56,7 @@ private:
   const int back_;
   const int front_second_;
   const int back_second_;
+  const bool uni_direction_;
   int master_;
 
   string name_;
