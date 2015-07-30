@@ -16,7 +16,7 @@ LDFLAGS = -g
 # -lm for the math library
 LDLIBS = -L../prob_verify -lpverify
 
-SOURCES=main.cpp channel.cpp lock.cpp clock.cpp
+SOURCES=main.cpp channel.cpp lock.cpp clock.cpp fair-strategy.cpp
 
 OBJECTS=$(SOURCES:.cpp=.o)
 

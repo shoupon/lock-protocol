@@ -19,8 +19,9 @@ using namespace std;
 #include "lock.h"
 #include "channel.h"
 #include "lock_utils.h"
+#include "fair-strategy.h"
 
-#define SCENARIO 4
+#define SCENARIO 3
 
 ProbVerifier pvObj ;
 GlobalState* startPoint;
@@ -145,14 +146,44 @@ int main( int argc, char* argv[] )
       pvObj.addMachine(&l);
     }
 
+    FairStrategy fair_strategy;
+    map<int, IdStatePairs> strategy_config;
+#if (SCENARIO == 3)
+    strategy_config[locks[1].macId()] = IdStatePairs();
+    strategy_config[locks[1].macId()][locks[2].macId()] = -1;
+    strategy_config[locks[1].macId()][locks[4].macId()] = -1;
+    strategy_config[locks[2].macId()] = IdStatePairs();
+    strategy_config[locks[2].macId()][locks[1].macId()] = -1;
+    strategy_config[locks[2].macId()][locks[4].macId()] = -1;
+    strategy_config[locks[4].macId()] = IdStatePairs();
+    strategy_config[locks[4].macId()][locks[1].macId()] = -1;
+    strategy_config[locks[4].macId()][locks[2].macId()] = -1;
+    fair_strategy.initialize(strategy_config);
+#endif
+
+    /*
+#if (SCENARIO >= 2)
+    GlobalState::registerFairGroup(locks[2].macId());
+    GlobalState::registerFairGroup(locks[4].macId());
+#endif
+#if (SCENARIO >= 3)
+    GlobalState::registerFairGroup(locks[1].macId());
+#endif
+*/
+
     //LockService *srvc = new LockService(2,0,1);
     Service srvc;
     StateMachine::dumpMachineTable();
-    
+
+    // Configure GlobalState
+#if (SCENARIO == 3)
+    GlobalState::setStrategy(&fair_strategy);
+#endif
+
     // Specify the starting state
     GlobalState::setService(&srvc);
     GlobalState start_point(pvObj.getMachinePtrs());
-    
+
     // Specify the global states in the set RS (stopping states)
     // initial state
     StoppingState stop_zero(&start_point);
@@ -332,7 +363,7 @@ int main( int argc, char* argv[] )
     
     // Start the procedure of probabilistic verification.
     // Specify the maximum probability depth to be explored
-    pvObj.start(20, startPoint);
+    pvObj.start(2, startPoint);
     
     //srvc->printTraversed();
       
