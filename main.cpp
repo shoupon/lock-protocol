@@ -167,10 +167,10 @@ int main( int argc, char* argv[] )
     strategy_config[locks[1].macId()][locks[2].macId()] = -1;
     strategy_config[locks[1].macId()][locks[4].macId()] = -1;
     strategy_config[locks[2].macId()] = IdStatePairs();
-    strategy_config[locks[2].macId()][locks[1].macId()] = -1;
+    strategy_config[locks[2].macId()][locks[1].macId()] = 0;
     strategy_config[locks[2].macId()][locks[4].macId()] = -1;
     strategy_config[locks[4].macId()] = IdStatePairs();
-    strategy_config[locks[4].macId()][locks[1].macId()] = -1;
+    strategy_config[locks[4].macId()][locks[1].macId()] = 0;
     strategy_config[locks[4].macId()][locks[2].macId()] = -1;
     fair_strategy.initialize(strategy_config);
 #endif
@@ -197,6 +197,9 @@ int main( int argc, char* argv[] )
     // Specify the starting state
     GlobalState::setService(&srvc);
     GlobalState start_point(pvObj.getMachinePtrs());
+#if (SCENARIO == 3)
+    start_point.setStrategyState(new FairStrategyState(strategy_config));
+#endif
 
     // Specify the global states in the set RS (stopping states)
     // initial state
@@ -387,12 +390,12 @@ int main( int argc, char* argv[] )
     pvObj.addPrintStop(printStop) ;
     ProbVerifierConfig config;
     config.setLowProbBound(0.0001);
-    config.setBoundMethod(DFS_ONE_STEP);
+    config.setBoundMethod(DFS_TWO_STEP);
     pvObj.configure(config);
     
     // Start the procedure of probabilistic verification.
     // Specify the maximum probability depth to be explored
-    pvObj.start(2, startPoint);
+    pvObj.start(20, new GlobalState(&start_point));
     
     //srvc->printTraversed();
       
