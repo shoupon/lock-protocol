@@ -174,9 +174,14 @@ int main( int argc, char* argv[] )
     strategy_config[locks[4].macId()][locks[2].macId()] = -1;
 #endif
 #if (SCENARIO >= 4)
+    strategy_config[locks[1].macId()][locks[5].macId()] = -1;
+    strategy_config[locks[2].macId()][locks[5].macId()] = -1;
+    strategy_config[locks[4].macId()][locks[5].macId()] = -1;
+
     strategy_config[locks[5].macId()] = IdStatePairs();
-    strategy_config[locks[5].macId()][locks[0].macId()] = -1;
     strategy_config[locks[5].macId()][locks[1].macId()] = 0;
+    strategy_config[locks[5].macId()][locks[2].macId()] = -1;
+    strategy_config[locks[5].macId()][locks[4].macId()] = -1;
 #endif
 
 #if (SCENARIO >= 3)
