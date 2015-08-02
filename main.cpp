@@ -21,7 +21,7 @@ using namespace std;
 #include "lock_utils.h"
 #include "fair-strategy.h"
 
-#define SCENARIO 4
+#define SCENARIO 5
 
 ProbVerifier pvObj ;
 GlobalState* startPoint;
@@ -134,7 +134,7 @@ int main( int argc, char* argv[] )
 #if (SCENARIO == 3 || SCENARIO == 4)
     locks.push_back(Lock(1, 2, 4, true));
 #elif (SCENARIO == 5)
-    locks.push_back(Lock(1, 2, 4, 5, 6));
+    locks.push_back(Lock(1, 2, 4, 5, 6, true));
 #else
     locks.push_back(Lock(1));
 #endif
@@ -178,6 +178,7 @@ int main( int argc, char* argv[] )
     strategy_config[locks[5].macId()][locks[0].macId()] = -1;
     strategy_config[locks[5].macId()][locks[1].macId()] = 0;
 #endif
+
 #if (SCENARIO >= 3)
     fair_strategy.initialize(strategy_config);
 #endif
@@ -272,6 +273,11 @@ int main( int argc, char* argv[] )
     setupFailureState(stop_group3_failure, 1, 2, 4);
     pvObj.addEND(&stop_group3_failure);
 #endif
+#if (SCENARIO >= 5)
+    StoppingState stop_group5_success(&start_point);
+    setupSuccessState(stop_group5_success, 1, 5, 6);
+    pvObj.addEND(&stop_group5_success);
+#endif
     /*
 #if (SCENARIO >= 4)
     StoppingState stop_group4_locked(&start_point);
@@ -282,7 +288,6 @@ int main( int argc, char* argv[] )
     setupDeniedState(stop_group4_denied, 5);
     pvObj.addSTOP(&stop_group4_denied);
 #endif
-*/
 #if (SCENARIO >= 5)
     StoppingState stop_group5_locked(&start_point);
     setupLockedState(stop_group5_locked, 1, 5, 6);
@@ -291,6 +296,7 @@ int main( int argc, char* argv[] )
     setupDeniedState(stop_group5_denied, 1);
     pvObj.addSTOP(&stop_group5_denied);
 #endif
+*/
     /*
     // state LF
     StoppingState stopLF(startPoint);

@@ -40,7 +40,7 @@ Lock::Lock(int k, int front, int back, bool uni_direction)
 
 Lock::Lock(int k, int front, int back, int front_second, int back_second)
     : lock_id_(k), active_(true), front_(front), back_(back),
-      front_second_(front_), back_second_(back_),
+      front_second_(front_second), back_second_(back_second),
       uni_direction_(false) {
   initialize();
   reset();
@@ -49,7 +49,7 @@ Lock::Lock(int k, int front, int back, int front_second, int back_second)
 Lock::Lock(int k, int front, int back, int front_second, int back_second,
            bool uni_direction)
     : lock_id_(k), active_(true), front_(front), back_(back),
-      front_second_(front_), back_second_(back_),
+      front_second_(front_second), back_second_(back_second),
       uni_direction_(uni_direction) {
   initialize();
   reset();
@@ -270,8 +270,7 @@ int Lock::transit(MessageTuple* in_msg, vector<MessageTuple*>& outMsgs,
         }
         break;
       default:
-        cout << "_state = " << _state << endl;
-        cout << "msg = " << in_msg->toReadable() << endl;
+        throw ProtocolError::kAssertError;
         assert(false);
         break;
     }
