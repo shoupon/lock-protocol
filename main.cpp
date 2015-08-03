@@ -50,8 +50,6 @@ void setupResetState(StoppingState& stop, int m, int f, int b) {
   stop.addAllow(new LockSnapshot(0, -1), locks[m].getName());
   for (auto &c : channels[m])
     stop.addAllow(new ChannelSnapshot(), c->getName());
-  //stop.addAllow(new LockSnapshot(0, -1), locks[f].getName());
-  //stop.addAllow(new LockSnapshot(0, -1), locks[b].getName());
 }
 
 void setupSuccessState(StoppingState& stop, int m, int f, int b) {
@@ -62,8 +60,6 @@ void setupSuccessState(StoppingState& stop, int m, int f, int b) {
 
 void setupFailureState(StoppingState& stop, int m, int f, int b) {
   stop.addAllow(new LockSnapshot(9, -1), locks[m].getName());
-  //stop.addAllow(new LockSnapshot(0, -1), locks[f].getName());
-  //stop.addAllow(new LockSnapshot(0, -1), locks[b].getName());
 }
 
 void setupDeniedState(StoppingState& stop, int m) {
@@ -163,40 +159,19 @@ int main( int argc, char* argv[] )
     FairStrategy fair_strategy;
     map<int, IdStatePairs> strategy_config;
 #if (SCENARIO >= 3)
-    strategy_config[locks[1].macId()] = IdStatePairs();
-    strategy_config[locks[1].macId()][locks[2].macId()] = -1;
-    strategy_config[locks[1].macId()][locks[4].macId()] = -1;
     strategy_config[locks[2].macId()] = IdStatePairs();
     strategy_config[locks[2].macId()][locks[1].macId()] = 0;
-    strategy_config[locks[2].macId()][locks[4].macId()] = -1;
     strategy_config[locks[4].macId()] = IdStatePairs();
     strategy_config[locks[4].macId()][locks[1].macId()] = 0;
-    strategy_config[locks[4].macId()][locks[2].macId()] = -1;
 #endif
 #if (SCENARIO >= 4)
-    strategy_config[locks[1].macId()][locks[5].macId()] = -1;
-    strategy_config[locks[2].macId()][locks[5].macId()] = -1;
-    strategy_config[locks[4].macId()][locks[5].macId()] = -1;
-
     strategy_config[locks[5].macId()] = IdStatePairs();
     strategy_config[locks[5].macId()][locks[1].macId()] = 0;
-    strategy_config[locks[5].macId()][locks[2].macId()] = -1;
-    strategy_config[locks[5].macId()][locks[4].macId()] = -1;
 #endif
 
 #if (SCENARIO >= 3)
     fair_strategy.initialize(strategy_config);
 #endif
-
-    /*
-#if (SCENARIO >= 2)
-    GlobalState::registerFairGroup(locks[2].macId());
-    GlobalState::registerFairGroup(locks[4].macId());
-#endif
-#if (SCENARIO >= 3)
-    GlobalState::registerFairGroup(locks[1].macId());
-#endif
-*/
 
     //LockService *srvc = new LockService(2,0,1);
     Service srvc;
@@ -224,47 +199,6 @@ int main( int argc, char* argv[] )
         stop_zero.addAllow(new ChannelSnapshot(), c->getName());
     }
     pvObj.addSTOP(&stop_zero);
-/*
-#if (SCENARIO >= 1)
-    StoppingState stop_group1_locked(&start_point);
-    setupLockedState(stop_group1_locked, 2, 0, 1);
-    pvObj.addSTOP(&stop_group1_locked);
-
-    StoppingState stop_group1_denied(&start_point);
-    setupDeniedState(stop_group1_denied, 2);
-    pvObj.addSTOP(&stop_group1_denied);
-
-    StoppingState stop_group1_reset(&start_point);
-    setupResetState(stop_group1_reset, 2, 0, 1);
-    pvObj.addSTOP(&stop_group1_reset);
-#endif
-#if (SCENARIO >= 2)
-    StoppingState stop_group2_locked(&start_point);
-    setupLockedState(stop_group2_locked, 4, 1, 3);
-    pvObj.addSTOP(&stop_group2_locked);
-
-    StoppingState stop_group2_denied(&start_point);
-    setupDeniedState(stop_group2_denied, 4);
-    pvObj.addSTOP(&stop_group2_denied);
-
-    StoppingState stop_group2_reset(&start_point);
-    setupResetState(stop_group2_reset, 4, 1, 3);
-    pvObj.addSTOP(&stop_group2_reset);
-#endif
-#if (SCENARIO >= 3)
-    StoppingState stop_group3_locked(&start_point);
-    setupLockedState(stop_group3_locked, 1, 2, 4);
-    pvObj.addSTOP(&stop_group3_locked);
-
-    StoppingState stop_group3_denied(&start_point);
-    setupDeniedState(stop_group3_denied, 1);
-    pvObj.addSTOP(&stop_group3_denied);
-
-    StoppingState stop_group3_reset(&start_point);
-    setupResetState(stop_group3_reset, 1, 2, 4);
-    pvObj.addSTOP(&stop_group3_reset);
-#endif
-    */
 #if (SCENARIO >= 3)
     StoppingState stop_group3_reset(&start_point);
     setupResetState(stop_group3_reset, 1, 2, 4);
@@ -283,25 +217,6 @@ int main( int argc, char* argv[] )
     setupSuccessState(stop_group5_success, 1, 5, 6);
     pvObj.addEND(&stop_group5_success);
 #endif
-    /*
-#if (SCENARIO >= 4)
-    StoppingState stop_group4_locked(&start_point);
-    setupLockedState(stop_group4_locked, 5, 0, 1);
-    pvObj.addSTOP(&stop_group4_locked);
-
-    StoppingState stop_group4_denied(&start_point);
-    setupDeniedState(stop_group4_denied, 5);
-    pvObj.addSTOP(&stop_group4_denied);
-#endif
-#if (SCENARIO >= 5)
-    StoppingState stop_group5_locked(&start_point);
-    setupLockedState(stop_group5_locked, 1, 5, 6);
-    pvObj.addSTOP(&stop_group5_locked);
-    StoppingState stop_group5_denied(&start_point);
-    setupDeniedState(stop_group5_denied, 1);
-    pvObj.addSTOP(&stop_group5_denied);
-#endif
-*/
     /*
     // state LF
     StoppingState stopLF(startPoint);
@@ -415,7 +330,7 @@ int main( int argc, char* argv[] )
     
     // Start the procedure of probabilistic verification.
     // Specify the maximum probability depth to be explored
-    pvObj.start(1, new GlobalState(&start_point));
+    pvObj.start(4, new GlobalState(&start_point));
     
     //srvc->printTraversed();
       
