@@ -134,13 +134,17 @@ int main( int argc, char* argv[] )
 #else
     locks.push_back(Lock(1));
 #endif
-#if (SCENARIO >= 1)
+#if (SCENARIO == 1)
+    locks.push_back(Lock(2, 0, 1, true));
+#elif (SCENARIO > 1)
     locks.push_back(Lock(2, 0, 1));
 #else
     locks.push_back(Lock(2));
 #endif
     locks.push_back(Lock(3));
-#if (SCENARIO >= 2)
+#if (SCENARIO == 2)
+    locks.push_back(Lock(4, 1, 3, true));
+#elif (SCENARIO > 2)
     locks.push_back(Lock(4, 1, 3));
 #else
     locks.push_back(Lock(4));
@@ -158,6 +162,11 @@ int main( int argc, char* argv[] )
 
     FairStrategy fair_strategy;
     map<int, IdStatePairs> strategy_config;
+
+#if (SCENARIO == 2)
+    strategy_config[locks[2].macId()] = IdStatePairs();
+    strategy_config[locks[2].macId()][locks[4].macId()] = -1;
+#endif
 #if (SCENARIO >= 3)
     strategy_config[locks[2].macId()] = IdStatePairs();
     strategy_config[locks[2].macId()][locks[1].macId()] = 0;
@@ -168,8 +177,7 @@ int main( int argc, char* argv[] )
     strategy_config[locks[5].macId()] = IdStatePairs();
     strategy_config[locks[5].macId()][locks[1].macId()] = 0;
 #endif
-
-#if (SCENARIO >= 3)
+#if (SCENARIO >= 2)
     fair_strategy.initialize(strategy_config);
 #endif
 
@@ -178,14 +186,21 @@ int main( int argc, char* argv[] )
     StateMachine::dumpMachineTable();
 
     // Configure GlobalState
-#if (SCENARIO >= 3)
+#if (SCENARIO < 2)
+    Strategy strategy;
+    GlobalState::setStrategy(&strategy);
+#endif
+#if (SCENARIO >= 2)
     GlobalState::setStrategy(&fair_strategy);
 #endif
 
     // Specify the starting state
     GlobalState::setService(&srvc);
     GlobalState start_point(pvObj.getMachinePtrs());
-#if (SCENARIO >= 3)
+#if (SCENARIO < 2)
+    start_point.setStrategyState(new StrategyState());
+#endif
+#if (SCENARIO >= 2)
     start_point.setStrategyState(new FairStrategyState(strategy_config));
 #endif
 
@@ -199,6 +214,32 @@ int main( int argc, char* argv[] )
         stop_zero.addAllow(new ChannelSnapshot(), c->getName());
     }
     pvObj.addSTOP(&stop_zero);
+#if (SCENARIO == 1)
+    StoppingState stop_group1_reset(&start_point);
+    setupResetState(stop_group1_reset, 2, 0, 1);
+    pvObj.addSTOP(&stop_group1_reset);
+
+    StoppingState stop_group1_success(&start_point);
+    setupSuccessState(stop_group1_success, 2, 0, 1);
+    pvObj.addEND(&stop_group1_success);
+
+    StoppingState stop_group1_failure(&start_point);
+    setupFailureState(stop_group1_failure, 2, 0, 1);
+    pvObj.addEND(&stop_group1_failure);
+#endif
+#if (SCENARIO == 2)
+    StoppingState stop_group2_reset(&start_point);
+    setupResetState(stop_group2_reset, 4, 1, 3);
+    pvObj.addSTOP(&stop_group2_reset);
+
+    StoppingState stop_group2_success(&start_point);
+    setupSuccessState(stop_group2_success, 4, 1, 3);
+    pvObj.addEND(&stop_group2_success);
+
+    StoppingState stop_group2_failure(&start_point);
+    setupFailureState(stop_group2_failure, 4, 1, 3);
+    pvObj.addEND(&stop_group2_failure);
+#endif
 #if (SCENARIO >= 3)
     StoppingState stop_group3_reset(&start_point);
     setupResetState(stop_group3_reset, 1, 2, 4);
@@ -324,13 +365,14 @@ int main( int argc, char* argv[] )
     
     pvObj.addPrintStop(printStop) ;
     ProbVerifierConfig config;
+    //config.disableTraceback();
     config.setLowProbBound(0.0001);
     config.setBoundMethod(DFS_TWO_STEP);
     pvObj.configure(config);
     
     // Start the procedure of probabilistic verification.
     // Specify the maximum probability depth to be explored
-    pvObj.start(4, new GlobalState(&start_point));
+    pvObj.start(8, new GlobalState(&start_point));
     
     //srvc->printTraversed();
       
