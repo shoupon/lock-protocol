@@ -14,6 +14,7 @@
 #include "../prob_verify/sync.h"
 #include "clock.h"
 #include "identifiers.h"
+#include "lock-config.h"
 
 class LockMessage;
 

@@ -21,7 +21,7 @@ using namespace std;
 #include "lock_utils.h"
 #include "fair-strategy.h"
 
-#define SCENARIO 5
+#define SCENARIO 2
 
 ProbVerifier pvObj ;
 GlobalState* startPoint;
@@ -368,11 +368,12 @@ int main( int argc, char* argv[] )
     //config.disableTraceback();
     config.setLowProbBound(0.0001);
     config.setBoundMethod(DFS_TWO_STEP);
+    config.setMaxClass(2);
     pvObj.configure(config);
     
     // Start the procedure of probabilistic verification.
     // Specify the maximum probability depth to be explored
-    pvObj.start(8, new GlobalState(&start_point));
+    pvObj.start(2, new GlobalState(&start_point));
     
     //srvc->printTraversed();
       

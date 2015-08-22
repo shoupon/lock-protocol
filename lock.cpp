@@ -106,8 +106,10 @@ int Lock::transit(MessageTuple* in_msg, vector<MessageTuple*>& outMsgs,
         break;
       case 1:
         if (msg == REQUEST) {
+#ifdef DENYING
           outMsgs.push_back(createResponse(in_msg, DENIED, lmsg->getSession(),
                                            lmsg->getSession()));
+#endif
           return 3;
         } else {
           return 3;
@@ -115,8 +117,10 @@ int Lock::transit(MessageTuple* in_msg, vector<MessageTuple*>& outMsgs,
         break;
       case 2:
         if (msg == REQUEST)  {
+#ifdef DENYING
           outMsgs.push_back(createResponse(in_msg, DENIED, lmsg->getSession(),
                                            lmsg->getSession()));
+#endif
           return 3;
         } else if (msg == GRANTED) {
           int from = lmsg->getOrigin();
@@ -132,17 +136,21 @@ int Lock::transit(MessageTuple* in_msg, vector<MessageTuple*>& outMsgs,
             assert(false);
           }
           return 3;
+#ifdef DENYING
         } else if (msg == DENIED) {
           _state = 5;
           return 3;
+#endif
         } else {
           return 3;
         }
         break;
       case 3:
         if (msg == REQUEST)  {
+#ifdef DENYING
           outMsgs.push_back(createResponse(in_msg, DENIED, lmsg->getSession(),
                                            lmsg->getSession()));
+#endif
           return 3;
         } else if (msg == GRANTED) {
           int from = lmsg->getOrigin();
@@ -155,17 +163,21 @@ int Lock::transit(MessageTuple* in_msg, vector<MessageTuple*>& outMsgs,
           else
             assert(false);
           return 3;
+#ifdef DENYING
         } else if (msg == DENIED) {
           _state = 5;
           return 3;
+#endif
         } else {
           return 3;
         }
         break;
       case 13:
         if (msg == REQUEST)  {
+#ifdef DENYING
           outMsgs.push_back(createResponse(in_msg, DENIED, lmsg->getSession(),
                                            lmsg->getSession()));
+#endif
           return 3;
         } else if (msg == GRANTED) {
           int from = lmsg->getOrigin();
@@ -180,17 +192,21 @@ int Lock::transit(MessageTuple* in_msg, vector<MessageTuple*>& outMsgs,
             assert(false);
           }
           return 3;
+#ifdef DENYING
         } else if (msg == DENIED) {
           _state = 5;
           return 3;
+#endif
         } else {
           return 3;
         }
         break;
       case 6:
         if (msg == REQUEST)  {
+#ifdef DENYING
           outMsgs.push_back(createResponse(in_msg, DENIED, lmsg->getSession(),
                                            lmsg->getSession()));
+#endif
           return 3;
         } else if (msg == GRANTED) {
           int from = lmsg->getOrigin();
@@ -206,17 +222,21 @@ int Lock::transit(MessageTuple* in_msg, vector<MessageTuple*>& outMsgs,
             assert(false);
           }
           return 3;
+#ifdef DENYING
         } else if (msg == DENIED) {
           _state = 5;
           return 3;
+#endif
         } else {
           return 3;
         }
         break;
       case 7:
         if (msg == REQUEST)  {
+#ifdef DENYING
           outMsgs.push_back(createResponse(in_msg, DENIED, lmsg->getSession(),
                                            lmsg->getSession()));
+#endif
           return 3;
         } else if (msg == GRANTED) {
           int from = lmsg->getOrigin();
@@ -229,17 +249,21 @@ int Lock::transit(MessageTuple* in_msg, vector<MessageTuple*>& outMsgs,
           else
             assert(false);
           return 3;
+#ifdef DENYING
         } else if (msg == DENIED) {
           _state = 5;
           return 3;
+#endif
         } else {
           return 3;
         }
         break;
       case 17:
         if (msg == REQUEST)  {
+#ifdef DENYING
           outMsgs.push_back(createResponse(in_msg, DENIED, lmsg->getSession(),
                                            lmsg->getSession()));
+#endif
           return 3;
         } else if (msg == GRANTED) {
           int from = lmsg->getOrigin();
@@ -252,9 +276,11 @@ int Lock::transit(MessageTuple* in_msg, vector<MessageTuple*>& outMsgs,
           else
             assert(false);
           return 3;
+#ifdef DENYING
         } else if (msg == DENIED) {
           _state = 5;
           return 3;
+#endif
         } else {
           return 3;
         }
@@ -262,8 +288,10 @@ int Lock::transit(MessageTuple* in_msg, vector<MessageTuple*>& outMsgs,
       case 4:
       case 5:
         if (msg == REQUEST) {
+#ifdef DENYING
           outMsgs.push_back(createResponse(in_msg, DENIED, lmsg->getSession(),
                                            lmsg->getSession()));
+#endif
           return 3;
         } else {
           return 3;
